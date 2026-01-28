@@ -1,0 +1,7 @@
+{
+  "name": "Wayang Seni Pujangga 3.2",
+  "description": "A neumorphic streaming application with advanced Gemini AI integration including Chat, Image Generation, and Audio Transcription.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

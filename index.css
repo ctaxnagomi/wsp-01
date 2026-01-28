@@ -1,0 +1,155 @@
+
+/* FUN MODE BASE */
+.fun-mode-active {
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 1970s: GRAINY & VINTAGE */
+.fun-mode-70s {
+  background-color: #3e2723 !important; /* Deep Umber */
+  color: #d7ccc8 !important;
+  font-family: 'Cinzel', serif !important;
+}
+
+.fun-mode-70s .crt-overlay::before {
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(50, 30, 0, 0.15) 50%), 
+              linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 4px, 4px 100%;
+}
+
+.fun-mode-70s::after {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(121, 85, 72, 0.1); /* Sepia Tint */
+  pointer-events: none;
+  z-index: 999;
+}
+
+.fun-mode-70s .bg-neu-base { background-color: #4e342e !important; border: 2px solid #5d4037 !important; box-shadow: none !important; }
+.fun-mode-70s .text-neu-accent { color: #ffa000 !important; }
+
+/* 1980s: FUNKY RETRO */
+.fun-mode-80s {
+  background-color: #0d0221 !important;
+  color: #00f3ff !important;
+  font-family: 'Press Start 2P', cursive !important;
+}
+
+.fun-mode-80s .retro-grid-bg {
+  background-image: linear-gradient(rgba(0, 243, 255, 0.2) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0, 243, 255, 0.2) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.fun-mode-80s .text-neu-accent { color: #ff00ff !important; text-shadow: 0 0 10px #ff00ff; }
+.fun-mode-80s .bg-neu-base { background-color: #1a0b2e !important; border: 1px solid #7a04eb !important; }
+
+/* 1990s: ROCK & ROLL / GRUNGE */
+.fun-mode-90s {
+  background-color: #1a1a1a !important;
+  color: #eeeeee !important;
+  font-family: 'Impact', 'Orbitron', sans-serif !important;
+}
+
+.fun-mode-90s .bg-neu-base { 
+  background-color: #262626 !important; 
+  border: 1px solid #444 !important;
+  background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+}
+
+.fun-mode-90s .text-neu-accent { 
+  color: #f44336 !important; 
+  text-transform: uppercase;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+
+.fun-mode-90s .shadow-neu-out { box-shadow: 10px 10px 0px #000 !important; }
+
+/* 2000s: TECHNO / GLOSSY */
+.fun-mode-2000s {
+  background-color: #e3f2fd !important;
+  color: #01579b !important;
+  font-family: 'Orbitron', sans-serif !important;
+}
+
+.fun-mode-2000s .bg-neu-base { 
+  background: linear-gradient(135deg, #ffffff 0%, #e1f5fe 100%) !important;
+  border: 1px solid #00e5ff !important;
+  border-radius: 40px !important;
+  box-shadow: 0 10px 30px rgba(0, 229, 255, 0.2) !important;
+}
+
+.fun-mode-2000s .text-neu-accent { 
+  color: #00b8d4 !important; 
+  background: linear-gradient(to right, #00e5ff, #1de9b6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* TV FRAMES */
+.tv-frame-70s {
+  border: 40px solid #5d4037;
+  border-radius: 60px;
+  background: #3e2723;
+  padding: 20px;
+  box-shadow: inset 0 0 100px #000, 0 20px 50px rgba(0,0,0,0.8);
+  position: relative;
+}
+
+.tv-frame-70s::after {
+  content: "ZENITH";
+  position: absolute;
+  bottom: 10px;
+  right: 60px;
+  color: #8d6e63;
+  font-size: 10px;
+  letter-spacing: 5px;
+}
+
+.tv-frame-80s {
+  border: 20px solid #222;
+  border-radius: 20px;
+  background: #111;
+  padding: 10px;
+  box-shadow: 0 0 30px rgba(255, 0, 255, 0.3);
+  position: relative;
+}
+
+.tv-frame-90s {
+  border: 15px solid #333;
+  border-radius: 10px;
+  background: #222;
+  padding: 5px;
+  box-shadow: inset 0 0 20px #000;
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px);
+}
+
+.tv-frame-2000s {
+  border: 10px solid #b0bec5;
+  border-radius: 30px;
+  background: #cfd8dc;
+  padding: 8px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+  border-bottom-width: 40px;
+}
+
+.tv-knob {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #8d6e63, #5d4037);
+  box-shadow: 2px 2px 5px #000;
+  margin-bottom: 10px;
+}
+
+.crt-screen {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 1%, black 99%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, black 1%, black 99%, transparent);
+}
+
+.crt-curve {
+  transform: scale(1.02) perspective(1000px) rotateX(2deg);
+}
