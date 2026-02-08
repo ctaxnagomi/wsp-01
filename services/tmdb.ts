@@ -103,3 +103,16 @@ const mapTMDBToMovie = (item: any): Movie => {
     total_seasons: item.number_of_seasons,
   };
 };
+
+export const fetchAnime = async (sortBy: string = 'popularity.desc'): Promise<Movie[]> => {
+  try {
+    const response = await fetch(
+       `${BASE_URL}/discover/tv?api_key=${API_KEY}&with_genres=16&with_origin_country=JP&sort_by=${sortBy}&vote_count.gte=100`
+    );
+    const data = await response.json();
+    return data.results.map(mapTMDBToMovie);
+  } catch (error) {
+    console.error(`Error fetching anime:`, error);
+    return [];
+  }
+};

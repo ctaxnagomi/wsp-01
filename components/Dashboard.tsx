@@ -7,11 +7,11 @@ import {
   Facebook, Instagram, Twitter, MessageCircle, 
   Maximize, Minimize, SkipForward, Pause, Captions, FileText, Send, Share2,
   AlertCircle, RefreshCw, Tv, Film, Layers, Monitor, Users, Link as LinkIcon, Check,
-  TrendingUp, Clock, Bookmark, PlayCircle, Eye, ScrollText, Loader2, ArrowRight, Sparkles
+  TrendingUp, Clock, Bookmark, PlayCircle, Eye, ScrollText, Loader2, ArrowRight, Sparkles, X
 } from 'lucide-react';
 import { Movie, UserProfile } from '../types';
 import { generateChatResponse } from '../services/geminiService';
-import { fetchTrending, searchMulti, fetchByDecade, fetchByGenre } from '../services/tmdb';
+import { fetchTrending, searchMulti, fetchByDecade, fetchByGenre, fetchAnime } from '../services/tmdb';
 import { watchPartyService, PartyUpdate } from '../services/watchPartyService';
 
 const VIDSRC_URL = import.meta.env.VITE_VIDSRC_URL || 'https://vidnest.fun';
@@ -223,6 +223,50 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   const [transcriptError, setTranscriptError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const transcriptRef = useRef<HTMLDivElement>(null);
+
+  // Archive State
+  const [showArchive, setShowArchive] = useState(false);
+  const [archiveData, setArchiveData] = useState<{
+      movies: Movie[];
+      tv: Movie[];
+      anime: Movie[];
+  }>({ movies: [], tv: [], anime: [] });
+  const [archiveSort, setArchiveSort] = useState('popularity.desc');
+
+  const handleOpenArchive = async () => {
+      setShowArchive(true);
+      // Fetch data if empty or needed
+      if (archiveData.movies.length === 0) {
+          const [movies, tv, anime] = await Promise.all([
+              fetchTrending('movie'),
+              fetchTrending('tv'),
+              fetchAnime(archiveSort) // Using default sort initially
+          ]);
+          setArchiveData({ 
+              movies: movies.slice(0, 20), 
+              tv: tv.slice(0, 20), 
+              anime: anime.slice(0, 20) 
+          });
+      }
+  };
+
+  useEffect(() => {
+      if (showArchive) {
+          const loadArchive = async () => {
+                const [movies, tv, anime] = await Promise.all([
+                    fetchTrending('movie'), 
+                    fetchTrending('tv'),
+                    fetchAnime(archiveSort)
+                ]);
+                setArchiveData({ 
+                    movies: movies.slice(0, 20), 
+                    tv: tv.slice(0, 20), 
+                    anime: anime.slice(0, 20) 
+                });
+          };
+          loadArchive();
+      }
+  }, [archiveSort]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -714,6 +758,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                 }
                 movies={trendingContent} 
                 onPlay={(m) => setSelectedMovie(m as any)} 
+                onViewArchive={handleOpenArchive}
             />
          )}
 
@@ -1146,11 +1191,64 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
            </div>
         </div>
       )}
+      {/* ARCHIVE OVERLAY */}
+      {showArchive && (
+          <div className="fixed inset-0 z-[60] bg-neu-base/95 backdrop-blur-3xl overflow-y-auto animate-fade-in custom-scrollbar">
+              <div className="p-10 flex flex-col gap-10">
+                  <div className="flex items-center justify-between">
+                      <h1 className="text-4xl font-black text-neu-text font-cinematic uppercase tracking-widest flex items-center gap-4">
+                          <Layers size={40} className="text-neu-accent" />
+                          The Archive
+                      </h1>
+                      <div className="flex items-center gap-6">
+                           <div className="flex bg-neu-base shadow-neu-in rounded-xl p-1">
+                                {[ 
+                                    { label: 'Popular', value: 'popularity.desc' }, 
+                                    { label: 'Top Rated', value: 'vote_average.desc' }, 
+                                ].map(opt => (
+                                    <button
+                                        key={opt.value}
+                                        onClick={() => setArchiveSort(opt.value)}
+                                        className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${archiveSort === opt.value ? 'bg-neu-accent text-white shadow-neu-out' : 'text-gray-500 hover:text-neu-text'}`}
+                                    >
+                                        {opt.label}
+                                    </button>
+                                ))}
+                           </div>
+                           <NeuIconButton onClick={() => setShowArchive(false)} className="w-16 h-16 !rounded-2xl bg-white shadow-neu-out hover:text-red-500">
+                                <X size={32} />
+                           </NeuIconButton>
+                      </div>
+                  </div>
+
+                  <div className="space-y-12 pb-20">
+                      <Section 
+                        title="Top 20 Movies" 
+                        subtitle="Cinematic Masterpieces"
+                        movies={archiveData.movies}
+                        onPlay={(m) => { setSelectedMovie(m as any); setShowArchive(false); }}
+                      />
+                       <Section 
+                        title="Top 20 Series" 
+                        subtitle="Binge-worthy Collections"
+                        movies={archiveData.tv}
+                        onPlay={(m) => { setSelectedMovie(m as any); setShowArchive(false); }}
+                      />
+                       <Section 
+                        title="Top Anime" 
+                        subtitle="Animation from Japan"
+                        movies={archiveData.anime}
+                        onPlay={(m) => { setSelectedMovie(m as any); setShowArchive(false); }}
+                      />
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
   );
 };
 
-const Section: React.FC<{ title: string, subtitle?: string, icon?: React.ReactNode, rightElement?: React.ReactNode, movies: Movie[], onPlay: (m: Movie) => void }> = ({ title, subtitle, icon, rightElement, movies, onPlay }) => (
+const Section: React.FC<{ title: string, subtitle?: string, icon?: React.ReactNode, rightElement?: React.ReactNode, movies: Movie[], onPlay: (m: Movie) => void, onViewArchive?: () => void }> = ({ title, subtitle, icon, rightElement, movies, onPlay, onViewArchive }) => (
   <div className="space-y-6">
     <div className="flex items-end justify-between px-2">
         <div className="space-y-1">
@@ -1161,7 +1259,15 @@ const Section: React.FC<{ title: string, subtitle?: string, icon?: React.ReactNo
         </div>
         <div className="flex items-center gap-4">
             {rightElement}
-            <button title="View Full Archive" className="text-xs font-black text-neu-accent uppercase tracking-widest hover:underline px-4 py-2 bg-neu-accent/10 rounded-xl">View Archive</button>
+            {onViewArchive && (
+                <button 
+                    onClick={onViewArchive}
+                    title="View Full Archive" 
+                    className="text-xs font-black text-neu-accent uppercase tracking-widest hover:underline px-4 py-2 bg-neu-accent/10 rounded-xl"
+                >
+                    View Archive
+                </button>
+            )}
         </div>
     </div>
     
