@@ -3,12 +3,13 @@ import { Sparkles, ScrollText, Play, ArrowRight } from 'lucide-react';
 
 interface IntroScreenProps {
   onComplete: () => void;
+  initialAct?: Act;
 }
 
 type Act = 'WAYANG' | 'SENI' | 'PUJANGGA' | 'WSP';
 
-export const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
-  const [act, setAct] = useState<Act>('WAYANG');
+export const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete, initialAct }) => {
+  const [act, setAct] = useState<Act>(initialAct || 'WAYANG');
   const [isTransitioning, setIsTransitioning] = useState(false);
 
   const nextAct = () => {
@@ -19,17 +20,17 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
       if (act === 'WAYANG') setAct('SENI');
       else if (act === 'SENI') setAct('PUJANGGA');
       else if (act === 'PUJANGGA') setAct('WSP');
-      else setAct('WAYANG'); // Loop back to start
+      else if (act === 'WSP') onComplete(); // End to end, no loop
       setIsTransitioning(false);
     }, 1000);
   };
 
-  useEffect(() => {
-    if (act === 'WSP') {
-      const timer = setTimeout(() => nextAct(), 4000); // Auto-loop from end
-      return () => clearTimeout(timer);
-    }
-  }, [act]);
+//   useEffect(() => {
+//     if (act === 'WSP') {
+//       const timer = setTimeout(() => nextAct(), 4000); // Auto-loop from end
+//       return () => clearTimeout(timer);
+//     }
+//   }, [act]);
 
   return (
     <div 
@@ -51,7 +52,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 md:w-48 md:h-48 bg-black/5 rounded-full blur-xl"></div>
             </div>
 
-            <h1 className="text-5xl md:text-9xl font-cinematic text-black/70 tracking-[0.15em] md:tracking-[0.2em] relative text-center px-4">
+            <h1 className="text-[12vmin] font-cinematic text-black/70 tracking-[0.2em] relative text-center px-4">
               WAYANG
               <span className="absolute -inset-1 blur-md text-black/20 opacity-50">WAYANG</span>
             </h1>
@@ -72,10 +73,10 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
           <div className="flex flex-col items-center justify-center h-full relative z-10 p-8">
             <div className="max-w-4xl text-center space-y-12">
                <div className="relative inline-block animate-ink-bleed">
-                  <h1 className="text-6xl md:text-[12rem] font-anime text-black leading-none drop-shadow-lg">
+                  <h1 className="text-[15vmin] font-anime text-black leading-none drop-shadow-lg">
                     Seni
                   </h1>
-                  <div className="absolute -bottom-2 md:-bottom-4 left-0 w-full h-1 md:h-2 bg-black rounded-full blur-sm opacity-10"></div>
+                  <div className="absolute -bottom-2 md:-bottom-4 left-0 w-full h-[1vmin] bg-black rounded-full blur-sm opacity-10"></div>
                </div>
                
                <p className="text-lg md:text-3xl font-cinematic text-gray-800 tracking-[0.2em] md:tracking-[0.3em] uppercase animate-fade-in delay-500">
@@ -108,7 +109,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
               <h2 className="text-base md:text-2xl font-cinematic text-blue-200/60 tracking-[0.5em] md:tracking-[1em] uppercase mb-4 md:mb-8">
                 Stage Three
               </h2>
-              <h1 className="text-4xl md:text-9xl font-cinematic text-white tracking-[0.1em] md:tracking-[0.15em] leading-tight drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
+              <h1 className="text-[13vmin] font-cinematic text-white tracking-[0.15em] leading-tight drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
                 PUJANGGA
               </h1>
               <div className="h-1 w-20 md:w-32 bg-white/20 mx-auto mt-8 md:mt-12 rounded-full overflow-hidden">
@@ -129,7 +130,7 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
 
           <div className="relative z-10 text-center scale-90 md:scale-110 animate-fade-in">
              <div className="relative inline-block mb-8 md:mb-12">
-                <h1 className="text-7xl md:text-[15rem] font-black water-text font-imax tracking-tighter drop-shadow-[10px_10px_20px_rgba(163,177,198,0.6)] md:drop-shadow-[15px_15px_30px_rgba(163,177,198,0.6)]">
+                <h1 className="text-[20vmin] font-black water-text font-imax tracking-tighter drop-shadow-[10px_10px_20px_rgba(163,177,198,0.6)] md:drop-shadow-[15px_15px_30px_rgba(163,177,198,0.6)]">
                     WSP
                 </h1>
                 <div className="absolute inset-0 blur-2xl text-blue-500/10 -z-10 animate-pulse">WSP</div>
@@ -147,13 +148,13 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
         </div>
       )}
 
-      {/* Persistent Interaction Hint */}
-      {!isTransitioning && act !== 'WSP' && (
+      {/* Persistent Interaction Hint Hidden as per request */}
+      {/* {!isTransitioning && act !== 'WSP' && (
         <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/40 font-cinematic text-xs tracking-widest uppercase animate-bounce pointer-events-none">
           <ArrowRight className="mb-1" />
           Tap to progress
         </div>
-      )}
+      )} */}
     </div>
   );
 };

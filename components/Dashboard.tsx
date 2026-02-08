@@ -174,6 +174,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   const [showShareToast, setShowShareToast] = useState(false);
   
   // Watch Later State
+  // Supabase Integration & Watch Later State
+  // Watch Later State
   const [watchLater, setWatchLater] = useState<Movie[]>(() => {
       const saved = localStorage.getItem('watchLater');
       return saved ? JSON.parse(saved) : [];
@@ -189,12 +191,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   };
 
   useEffect(() => {
+      // Always sync to local storage as backup/cache
       localStorage.setItem('watchLater', JSON.stringify(watchLater));
   }, [watchLater]);
 
-  const toggleWatchLater = (movie: Movie) => {
+  const toggleWatchLater = async (movie: Movie) => {
+      const isAlreadyAdded = watchLater.some(m => m.id === movie.id);
+      
+      // Optimistic Update
       setWatchLater(prev => {
-          if (prev.some(m => m.id === movie.id)) {
+          if (isAlreadyAdded) {
               return prev.filter(m => m.id !== movie.id);
           } else {
               return [...prev, movie];
@@ -522,9 +528,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
     <div className={`min-h-screen transition-all duration-700 ${funMode ? `fun-mode-active crt-overlay retro-grid-bg ${getFunClass()}` : 'bg-neu-base'}`}>
       <button title="Secret Anchor" className="opacity-0 absolute pointer-events-none">Hidden</button>
       {/* Navbar - Floating & Glassy */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 md:px-6 py-3 md:py-4 flex items-center justify-between gap-4 ${isScrolled ? 'bg-neu-base/80 backdrop-blur-xl shadow-neu-out border-b border-white/20' : 'bg-transparent'}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 md:px-6 py-2 md:py-4 flex items-center justify-between gap-2 md:gap-4 ${isScrolled ? 'bg-neu-base/80 backdrop-blur-xl shadow-neu-out border-b border-white/20' : 'bg-transparent'}`}>
         <div className="flex items-center gap-8">
-            <h1 className="font-bold text-neu-accent tracking-[0.2em] text-2xl cursor-pointer whitespace-nowrap font-imax animate-pulse flex items-center gap-2">
+            <h1 className="font-bold text-neu-accent tracking-[0.2em] text-lg sm:text-2xl cursor-pointer whitespace-nowrap font-imax animate-pulse flex items-center gap-2">
                {funMode && <Monitor size={24} className="text-retro-neon-blue"/>}
                WSP {funMode ? 'RETRO' : 'STREAM'}
             </h1>
@@ -545,10 +551,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
             <button 
                 title="Toggle Fun Mode Selector"
                 onClick={() => setShowFunSelector(!showFunSelector)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 transition-all ${funMode ? 'border-retro-neon-pink text-retro-neon-pink' : 'border-neu-accent text-neu-accent'}`}
+                className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-xl border-2 transition-all ${funMode ? 'border-retro-neon-pink text-retro-neon-pink' : 'border-neu-accent text-neu-accent'}`}
             >
-                <Tv size={18} />
-                <span className="font-bold text-xs">FUN MODE</span>
+                <Tv size={14} className="md:w-[18px] md:h-[18px]" />
+                <span className="font-bold text-[10px] md:text-xs">FUN MODE</span>
             </button>
         </div>
 
@@ -640,7 +646,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
       </nav>
 
       {/* Hero Section - Cinematic Layout */}
-      <header className="relative w-full min-h-[85vh] md:h-[95vh] overflow-hidden">
+      <header className="relative w-full min-h-[65vh] sm:min-h-[75vh] md:h-[95vh] overflow-hidden">
         {featuredContent && (
             <>
                 <div className="absolute inset-0 animate-slow-zoom">
@@ -662,7 +668,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                              </div>
                         </div>
 
-                        <h2 className="text-4xl md:text-8xl font-black text-neu-text leading-[1.1] font-cinematic drop-shadow-2xl">
+                        <h2 className="text-3xl sm:text-5xl md:text-8xl font-black text-neu-text leading-[1.1] font-cinematic drop-shadow-2xl">
                             {featuredContent.title}
                         </h2>
                         
@@ -674,25 +680,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                             ))}
                         </div>
 
-                        <p className="text-gray-600 text-lg md:text-xl line-clamp-3 leading-relaxed max-w-2xl font-medium">
+                        <p className="text-gray-600 text-sm sm:text-lg md:text-xl line-clamp-2 sm:line-clamp-3 leading-relaxed max-w-2xl font-medium">
                             {featuredContent.overview}
                         </p>
                         
                         <div className="flex items-center gap-6 pt-6">
                              <button 
                                 onClick={() => setSelectedMovie(featuredContent as any)}
-                                className="bg-neu-accent text-white px-10 py-5 rounded-2xl shadow-neu-out flex items-center gap-4 hover:scale-105 active:scale-95 transition-all group"
+                                className="bg-neu-accent text-white px-6 py-3 sm:px-10 sm:py-5 rounded-2xl shadow-neu-out flex items-center gap-3 sm:gap-4 hover:scale-105 active:scale-95 transition-all group"
                             >
-                                <Play fill="currentColor" size={24} className="group-hover:animate-pulse" /> 
-                                <span className="font-black text-lg tracking-widest uppercase">Start Journey</span>
+                                <Play fill="currentColor" size={20} className="sm:w-6 sm:h-6 group-hover:animate-pulse" /> 
+                                <span className="font-black text-sm sm:text-lg tracking-widest uppercase">Start Journey</span>
                             </button>
                             
                             <NeuIconButton 
                                 onClick={() => toggleWatchLater(featuredContent)}
-                                className={`w-16 h-16 flex items-center justify-center !rounded-2xl group transition-all ${watchLater.some(m => m.id === featuredContent.id) ? '!bg-neu-accent !text-white' : ''}`}
+                                className={`w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center !rounded-2xl group transition-all ${watchLater.some(m => m.id === featuredContent.id) ? '!bg-neu-accent !text-white' : ''}`}
                                 title={watchLater.some(m => m.id === featuredContent.id) ? "Remove from Watch Later" : "Add to Watch Later"}
                             >
-                                {watchLater.some(m => m.id === featuredContent.id) ? <Check size={24} /> : <Plus size={24} className="group-hover:rotate-90 transition-transform" />}
+                                {watchLater.some(m => m.id === featuredContent.id) ? <Check size={20} className="sm:w-6 sm:h-6" /> : <Plus size={20} className="sm:w-6 sm:h-6 group-hover:rotate-90 transition-transform" />}
                             </NeuIconButton>
                         </div>
                     </div>
@@ -723,7 +729,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                 <button 
                     key={cat} 
                     onClick={() => setSelectedCategory(cat)}
-                    className={`px-8 py-4 rounded-2xl bg-neu-base shadow-neu-out whitespace-nowrap text-sm font-bold transition-all hover:translate-y-[-2px] ${selectedCategory === cat ? 'text-neu-accent shadow-neu-in' : 'text-gray-600 hover:text-neu-accent'}`}
+                    className={`px-4 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl bg-neu-base shadow-neu-out whitespace-nowrap text-xs sm:text-sm font-bold transition-all hover:translate-y-[-2px] ${selectedCategory === cat ? 'text-neu-accent shadow-neu-in' : 'text-gray-600 hover:text-neu-accent'}`}
                 >
                     {cat}
                 </button>
@@ -1141,7 +1147,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
 
               {/* CONSOLE: Bottom Player Bar */}
               <div className="h-24 bg-neu-base/90 backdrop-blur-xl z-50 flex items-center justify-between px-10 border-t border-white/30">
-                  <div className="flex items-center gap-6">
+                  {/* Playback Controls Hidden as per request */}
+                  {/* <div className="flex items-center gap-6">
                      <NeuIconButton 
                         onClick={() => {
                             const newIsPlaying = !isPlaying;
@@ -1162,20 +1169,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                         <SkipForward size={20} />
                      </NeuIconButton>
                      <div className="text-[10px] font-black tracking-widest text-neu-text/60">04:20 : 01:32:00</div>
-                  </div>
+                  </div> */}
 
-                 <div className="flex-1 mx-12 hidden lg:block">
+                  {/* Progress Bar Hidden as per request */}
+                 {/* <div className="flex-1 mx-12 hidden lg:block">
                      <div className="h-2 bg-neu-shadowDark/20 rounded-full shadow-neu-in relative group cursor-pointer">
                          <div className="h-full bg-neu-accent w-1/3 rounded-full relative shadow-[0_0_10px_rgba(108,92,231,0.5)]">
                             <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg scale-0 group-hover:scale-100 transition-transform"></div>
                          </div>
                      </div>
-                 </div>
+                 </div> */}
 
-                 <div className="flex items-center gap-4">
-                     <NeuIconButton onClick={() => setIsCaptionsOn(!isCaptionsOn)} active={isCaptionsOn} className="w-12 h-12 !rounded-xl" title="Captions">
+                 <div className="flex items-center gap-4 ml-auto">
+                     {/* <NeuIconButton onClick={() => setIsCaptionsOn(!isCaptionsOn)} active={isCaptionsOn} className="w-12 h-12 !rounded-xl" title="Captions">
                         <Captions size={20} />
-                     </NeuIconButton>
+                     </NeuIconButton> */}
                      <NeuIconButton onClick={toggleWatchParty} active={isWatchParty} className="w-12 h-12 !rounded-xl" title="Watchparty">
                         <Users size={20} />
                      </NeuIconButton>
@@ -1195,12 +1203,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
       {showArchive && (
           <div className="fixed inset-0 z-[60] bg-neu-base/95 backdrop-blur-3xl overflow-y-auto animate-fade-in custom-scrollbar">
               <div className="p-4 md:p-10 flex flex-col gap-6 md:gap-10">
-                  <div className="flex items-center justify-between">
-                      <h1 className="text-2xl md:text-4xl font-black text-neu-text font-cinematic uppercase tracking-widest flex items-center gap-2 md:gap-4">
+                  <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+                      <h1 className="text-2xl md:text-4xl font-black text-neu-text font-cinematic uppercase tracking-widest flex items-center gap-2 md:gap-4 pr-16 md:pr-0">
                           <Layers size={24} className="md:w-10 md:h-10 text-neu-accent" />
                           The Archive
                       </h1>
-                      <div className="flex items-center gap-6">
+                      
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6">
                            <div className="flex bg-neu-base shadow-neu-in rounded-xl p-1">
                                 {[ 
                                     { label: 'Popular', value: 'popularity.desc' }, 
@@ -1209,15 +1218,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                                     <button
                                         key={opt.value}
                                         onClick={() => setArchiveSort(opt.value)}
-                                        className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${archiveSort === opt.value ? 'bg-neu-accent text-white shadow-neu-out' : 'text-gray-500 hover:text-neu-text'}`}
+                                        className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all ${archiveSort === opt.value ? 'bg-neu-accent text-white shadow-neu-out' : 'text-gray-500 hover:text-neu-text'}`}
                                     >
                                         {opt.label}
                                     </button>
                                 ))}
                            </div>
-                           <NeuIconButton onClick={() => setShowArchive(false)} className="w-16 h-16 !rounded-2xl bg-white shadow-neu-out hover:text-red-500">
-                                <X size={32} />
-                           </NeuIconButton>
+
+                           <div className="absolute top-0 right-0 md:relative md:top-auto md:right-auto">
+                               <NeuIconButton 
+                                    onClick={() => setShowArchive(false)} 
+                                    className="w-12 h-12 md:w-16 md:h-16 !rounded-2xl bg-white shadow-neu-out hover:text-red-500"
+                                >
+                                    <X size={24} className="md:w-8 md:h-8" />
+                               </NeuIconButton>
+                           </div>
                       </div>
                   </div>
 
@@ -1249,21 +1264,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
 };
 
 const Section: React.FC<{ title: string, subtitle?: string, icon?: React.ReactNode, rightElement?: React.ReactNode, movies: Movie[], onPlay: (m: Movie) => void, onViewArchive?: () => void }> = ({ title, subtitle, icon, rightElement, movies, onPlay, onViewArchive }) => (
-  <div className="space-y-6">
-    <div className="flex items-end justify-between px-2">
+  <div className="space-y-4 md:space-y-6">
+    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 px-2">
         <div className="space-y-1">
-            <h3 className="text-3xl font-black text-neu-text font-cinematic flex items-center gap-3 tracking-wider">
-                {icon} {title}
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-neu-text font-cinematic flex items-center gap-2 sm:gap-3 tracking-wider">
+                <span className="flex-shrink-0">{icon}</span> {title}
             </h3>
-            {subtitle && <p className="text-xs font-bold text-gray-400 uppercase tracking-[0.2em]">{subtitle}</p>}
+            {subtitle && <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-[0.2em]">{subtitle}</p>}
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-4">
             {rightElement}
             {onViewArchive && (
                 <button 
                     onClick={onViewArchive}
                     title="View Full Archive" 
-                    className="text-xs font-black text-neu-accent uppercase tracking-widest hover:underline px-4 py-2 bg-neu-accent/10 rounded-xl"
+                    className="text-[10px] sm:text-xs font-black text-neu-accent uppercase tracking-widest hover:underline px-3 py-1.5 sm:px-4 sm:py-2 bg-neu-accent/10 rounded-xl"
                 >
                     View Archive
                 </button>
@@ -1271,36 +1286,36 @@ const Section: React.FC<{ title: string, subtitle?: string, icon?: React.ReactNo
         </div>
     </div>
     
-    <div className="flex overflow-x-auto space-x-8 pb-10 px-4 no-scrollbar">
+    <div className="flex overflow-x-auto space-x-4 sm:space-x-8 pb-6 sm:pb-10 px-2 sm:px-4 no-scrollbar">
       {movies.map(movie => (
-        <div key={movie.id} onClick={() => onPlay(movie)} className="min-w-[220px] md:min-w-[280px] group cursor-pointer transition-all">
-           <div className="relative rounded-[2rem] overflow-hidden shadow-neu-out mb-6 aspect-[10/14] border-4 border-transparent group-hover:border-neu-accent/30 transition-all">
+        <div key={movie.id} onClick={() => onPlay(movie)} className="min-w-[160px] sm:min-w-[220px] md:min-w-[280px] group cursor-pointer transition-all">
+           <div className="relative rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-neu-out mb-3 sm:mb-6 aspect-[10/14] border-2 sm:border-4 border-transparent group-hover:border-neu-accent/30 transition-all">
               <img src={movie.poster_path} alt={movie.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4">
-                 <div className="w-16 h-16 glass rounded-full flex items-center justify-center text-white scale-50 group-hover:scale-100 transition-transform">
-                    <PlayCircle size={40} fill="rgba(255,255,255,0.2)" />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 sm:gap-4">
+                 <div className="w-10 h-10 sm:w-16 sm:h-16 glass rounded-full flex items-center justify-center text-white scale-50 group-hover:scale-100 transition-transform">
+                    <PlayCircle size={24} className="sm:w-10 sm:h-10" fill="rgba(255,255,255,0.2)" />
                  </div>
-                 <span className="text-[10px] font-black text-white uppercase tracking-[0.4em] translate-y-4 group-hover:translate-y-0 transition-transform duration-500">Play Reel</span>
+                 <span className="text-[8px] sm:text-[10px] font-black text-white uppercase tracking-[0.2em] sm:tracking-[0.4em] translate-y-4 group-hover:translate-y-0 transition-transform duration-500">Play Reel</span>
               </div>
               
-              <div className="absolute top-4 left-4">
-                 <div className="glass-dark px-3 py-1 rounded-full text-[8px] font-black text-white uppercase tracking-widest">
+              <div className="absolute top-2 left-2 sm:top-4 sm:left-4">
+                 <div className="glass-dark px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[6px] sm:text-[8px] font-black text-white uppercase tracking-widest">
                     {movie.rating} Rating
                  </div>
               </div>
               
               {movie.media_type === 'tv' && (
-                  <div className="absolute top-4 right-4">
-                    <div className="bg-neu-accent px-3 py-1 rounded-full text-[8px] font-black text-white uppercase tracking-widest shadow-lg">
+                  <div className="absolute top-2 right-2 sm:top-4 sm:right-4">
+                    <div className="bg-neu-accent px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[6px] sm:text-[8px] font-black text-white uppercase tracking-widest shadow-lg">
                         Serial
                     </div>
                   </div>
               )}
            </div>
            
-           <div className="space-y-2 px-2 group-hover:translate-x-1 transition-transform">
-               <h4 className="font-black text-neu-text text-lg truncate tracking-wide">{movie.title}</h4>
-               <div className="flex items-center gap-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+           <div className="space-y-1 sm:space-y-2 px-1 sm:px-2 group-hover:translate-x-1 transition-transform">
+               <h4 className="font-black text-neu-text text-sm sm:text-lg truncate tracking-wide">{movie.title}</h4>
+               <div className="flex items-center gap-2 sm:gap-3 text-[8px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">
                  <span>{movie.release_date}</span>
                  <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
                  <span className="truncate">{movie.genre[0]}</span>

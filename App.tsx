@@ -31,6 +31,8 @@ export default function App() {
   const handleLogin = () => {
     localStorage.setItem('wsp_session', 'active');
     setIsLoggedIn(true);
+    // If user data is provided (e.g. from Supabase), we could use it to pre-fill profiles
+    // For now, we stick to the flow: Login -> Profile Selector
   };
 
   const handleSelectProfile = (profile: UserProfile) => {
@@ -44,25 +46,32 @@ export default function App() {
   return (
     <div className="min-h-screen text-neu-text selection:bg-neu-accent selection:text-white">
       {!isLoggedIn ? (
-          <div className="h-[100dvh] w-full relative overflow-hidden bg-black">
+          <div className="h-screen supports-[height:100dvh]:h-[100dvh] w-full relative overflow-hidden bg-black">
              {/* Layer 1: Intro Sequence (Base Layer) */}
              <div className="absolute inset-0 z-0">
                  <IntroScreen onComplete={handleIntroComplete} />
              </div>
 
-             {/* Layer 2: Auth Gateway (Slide-up Panel) */}
-             <div 
-                className={`absolute inset-0 z-10 transition-transform duration-1000 ease-in-out bg-neu-base ${showIntro ? 'translate-y-full' : 'translate-y-0'}`}
-             >
-                 <AuthGateway onLogin={handleLogin} />
-             </div>
+             {/* Layer 2: Auth Gateway (Split/Popup Panel) */}
+             {!showIntro && (
+                 <div className="absolute inset-0 z-10 flex flex-col md:flex-row animate-popup border-4 border-neu-accent/20 rounded-[2rem] overflow-hidden m-2 md:m-4 shadow-2xl">
+                     {/* Left/Top: Visual Branding (WSP Act) */}
+                     <div className="flex-[0.6] bg-black relative overflow-hidden hidden md:block border-r border-white/10">
+                         <IntroScreen initialAct="WSP" onComplete={() => {}} />
+                     </div>
+                     {/* Right/Bottom: Auth Gateway */}
+                     <div className="flex-1 md:flex-[0.4] bg-neu-base relative">
+                         <AuthGateway onLogin={handleLogin} />
+                     </div>
+                 </div>
+             )}
           </div>
       ) : !activeProfile ? (
         <ProfileSelector onSelectProfile={handleSelectProfile} />
       ) : (
         <>
           <Dashboard user={activeProfile} onSwitchProfile={handleSwitchProfile} />
-          <AINativeSpatialAgentic />
+          {/* <AINativeSpatialAgentic /> */}
         </>
       )}
     </div>
