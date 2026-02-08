@@ -213,6 +213,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   const [selectedEpisode, setSelectedEpisode] = useState(1);
   const [sxeInput, setSxeInput] = useState('S1E1');
   const [videoSource, setVideoSource] = useState<'vidsrc' | 'vidfastpro'>('vidsrc');
+  const [activeSubtitle, setActiveSubtitle] = useState<string | null>(null);
+
+  const getSubtitles = (movie: Movie) => {
+    return [
+        { id: 'en', lang: 'English', format: 'SRT', url: 'https://raw.githubusercontent.com/subtitles/english.srt' },
+        { id: 'ms', lang: 'Bahasa Melayu', format: 'SRT', url: 'https://raw.githubusercontent.com/subtitles/malay.srt' },
+        { id: 'zh', lang: 'Mandarin', format: 'SRT', url: 'https://raw.githubusercontent.com/subtitles/chinese.srt' },
+    ];
+  };
+
+  const downloadSubtitle = (sub: any, movieTitle: string) => {
+    const dummyContent = `1\n00:00:01,000 --> 00:00:04,000\n[${sub.lang} Subtitles for ${movieTitle}]\nEnjoy the movie!`;
+    const blob = new Blob([dummyContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${movieTitle.replace(/\s+/g, '_')}_${sub.lang}.srt`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  };
 
   const handleSxEChange = (val: string) => {
     setSxeInput(val);
@@ -548,48 +570,51 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
             </div>
             
             {/* Fun Mode Toggle */}
-            <button 
-                title="Toggle Fun Mode Selector"
-                onClick={() => setShowFunSelector(!showFunSelector)}
-                className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-xl border-2 transition-all ${funMode ? 'border-retro-neon-pink text-retro-neon-pink' : 'border-neu-accent text-neu-accent'}`}
-            >
-                <Tv size={14} className="md:w-[18px] md:h-[18px]" />
-                <span className="font-bold text-[10px] md:text-xs">FUN MODE</span>
-            </button>
-        </div>
+            <div className="relative">
+                <button 
+                    title="Toggle Fun Mode Selector"
+                    onClick={() => setShowFunSelector(!showFunSelector)}
+                    className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-xl border-2 transition-all ${funMode ? 'border-retro-neon-pink text-retro-neon-pink' : 'border-neu-accent text-neu-accent'}`}
+                >
+                    <Tv size={14} className="md:w-[18px] md:h-[18px]" />
+                    <span className="font-bold text-[10px] md:text-xs">FUN MODE</span>
+                    <ChevronDown size={14} className={`transition-transform ${showFunSelector ? 'rotate-180' : ''}`} />
+                </button>
 
-        {/* Fun Mode Year Selector Modal/Dropdown */}
-        {showFunSelector && (
-            <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 p-6 bg-neu-base rounded-3xl shadow-neu-out border border-white/30 animate-fade-in w-[90vw] max-w-xs md:w-80">
-                <h4 className="text-center font-black text-neu-text uppercase tracking-widest text-xs mb-4">Choose Era</h4>
-                <div className="grid grid-cols-2 gap-3">
-                    {[1970, 1980, 1990, 2000, 2010, 2020].map(decade => (
-                        <button 
-                            key={decade}
-                            title={`Select ${decade}s Era`}
-                            onClick={() => {
-                                setFunYear(decade);
-                                setFunMode(true);
-                                setShowFunSelector(false);
-                            }}
-                            className={`py-3 rounded-xl font-bold transition-all ${funYear === decade ? 'bg-neu-accent text-white shadow-neu-in' : 'bg-neu-base shadow-neu-btn text-gray-500 hover:text-neu-accent'}`}
-                        >
-                            {decade}s
-                        </button>
-                    ))}
-                    <button 
-                        className="col-span-2 py-3 mt-2 rounded-xl font-bold bg-red-400 text-white shadow-neu-btn"
-                        onClick={() => {
-                            setFunMode(false);
-                            setFunYear(null);
-                            setShowFunSelector(false);
-                        }}
-                    >
-                        Disable Fun Mode
-                    </button>
-                </div>
+                {/* Fun Mode Year Selector Dropdown */}
+                {showFunSelector && (
+                    <div className="absolute top-full left-0 mt-3 z-50 p-6 bg-neu-base rounded-3xl shadow-neu-out border border-white/30 animate-fade-in w-72 md:w-80">
+                        <h4 className="text-center font-black text-neu-text uppercase tracking-widest text-xs mb-4">Choose Era</h4>
+                        <div className="grid grid-cols-2 gap-3">
+                            {[1970, 1980, 1990, 2000, 2010, 2020].map(decade => (
+                                <button 
+                                    key={decade}
+                                    title={`Select ${decade}s Era`}
+                                    onClick={() => {
+                                        setFunYear(decade);
+                                        setFunMode(true);
+                                        setShowFunSelector(false);
+                                    }}
+                                    className={`py-3 rounded-xl font-bold transition-all ${funYear === decade ? 'bg-neu-accent text-white shadow-neu-in' : 'bg-neu-base shadow-neu-btn text-gray-500 hover:text-neu-accent'}`}
+                                >
+                                    {decade}s
+                                </button>
+                            ))}
+                            <button 
+                                className="col-span-2 py-3 mt-2 rounded-xl font-bold bg-red-400 text-white shadow-neu-btn hover:bg-red-500 transition-colors"
+                                onClick={() => {
+                                    setFunMode(false);
+                                    setFunYear(null);
+                                    setShowFunSelector(false);
+                                }}
+                            >
+                                Disable Fun Mode
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
-        )}
+        </div>
 
         <div className="flex-1 max-w-xl mx-4 relative hidden md:block">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -657,7 +682,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                 <div className="absolute inset-0 bg-gradient-to-t from-neu-base via-transparent to-black/20" />
                 <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-neu-base to-transparent" />
                 
-                <div className="absolute inset-0 flex flex-col justify-center px-6 md:px-20 z-10 pt-20 md:pt-0">
+                <div className="absolute inset-0 flex flex-col justify-end pb-32 px-6 md:px-20 z-10 md:justify-center md:pb-0 md:pt-0">
                     <div className="max-w-3xl space-y-6 animate-fade-in">
                         <div className="flex items-center gap-3">
                              <span className="glass-dark text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
@@ -669,8 +694,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                         </div>
 
                         <h2 className="text-3xl sm:text-5xl md:text-8xl font-black text-neu-text leading-[1.1] font-cinematic drop-shadow-2xl">
-                            {featuredContent.title}
-                        </h2>
+                             {featuredContent.title}
+                         </h2>
                         
                         <div className="flex flex-wrap gap-2">
                             {featuredContent.genre.map(g => (
@@ -685,13 +710,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                         </p>
                         
                         <div className="flex items-center gap-6 pt-6">
-                             <button 
-                                onClick={() => setSelectedMovie(featuredContent as any)}
-                                className="bg-neu-accent text-white px-6 py-3 sm:px-10 sm:py-5 rounded-2xl shadow-neu-out flex items-center gap-3 sm:gap-4 hover:scale-105 active:scale-95 transition-all group"
-                            >
-                                <Play fill="currentColor" size={20} className="sm:w-6 sm:h-6 group-hover:animate-pulse" /> 
-                                <span className="font-black text-sm sm:text-lg tracking-widest uppercase">Start Journey</span>
-                            </button>
+                              <button 
+                                 onClick={() => setSelectedMovie(featuredContent as any)}
+                                 className="bg-neu-accent text-white px-5 py-3 sm:px-10 sm:py-5 rounded-2xl shadow-neu-out flex items-center gap-3 sm:gap-4 hover:scale-105 active:scale-95 transition-all group"
+                             >
+                                 <Play fill="currentColor" size={18} className="sm:w-6 sm:h-6 group-hover:animate-pulse" /> 
+                                 <span className="font-black text-xs sm:text-lg tracking-widest uppercase">Start Journey</span>
+                             </button>
                             
                             <NeuIconButton 
                                 onClick={() => toggleWatchLater(featuredContent)}
@@ -704,25 +729,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                     </div>
                 </div>
 
-                {/* Vertical Sidebar Info (Right) - Retro/Fun Switch */}
-                <div className="absolute right-4 md:right-10 top-1/2 -translate-y-1/2 flex flex-col items-center gap-8 hidden xl:flex z-10 animate-fade-in">
-                     <NeuIconButton 
-                        onClick={() => setShowFunSelector(!showFunSelector)}
-                        className={`w-14 h-14 !rounded-2xl transition-all duration-500 group ${funMode ? 'shadow-neu-in bg-neu-base border border-retro-neon-pink/50' : 'shadow-neu-out bg-neu-base hover:scale-110'}`}
-                        title="Toggle Fun Mode"
-                    >
-                        <Sparkles 
-                            size={24} 
-                            className={`transition-all duration-500 ${funMode ? 'text-retro-neon-pink animate-spin-slow' : 'text-neu-accent group-hover:rotate-12'}`} 
-                        />
-                    </NeuIconButton>
-                </div>
+                {/* Vertical Sidebar Info (Right) removed as per request */}
             </>
         )}
       </header>
 
       {/* Main Content Area */}
-      <main className="relative z-20 px-6 -mt-32 space-y-16 pb-20">
+      <main className="relative z-20 px-4 md:px-6 mt-4 sm:-mt-16 md:-mt-32 space-y-12 md:space-y-16 pb-20">
          {/* Categories Row */}
          <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-4 px-2">
             {['Originals', 'Watch Later', 'Legends', 'Action', 'Sci-Fi', 'Historical', 'Documentary', 'Drama'].map(cat => (
@@ -935,16 +948,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                             </div>
                         )}
 
-                        <div className="absolute bottom-[-3rem] right-0 flex items-center gap-2">
-                             <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Server:</span>
-                             <button 
-                                onClick={() => setVideoSource(prev => prev === 'vidsrc' ? 'vidfastpro' : 'vidsrc')}
-                                className="px-3 py-1 rounded-lg bg-neu-base shadow-neu-out hover:shadow-neu-in text-[10px] font-black uppercase tracking-widest text-neu-accent transition-all flex items-center gap-2"
-                             >
-                                <RefreshCw size={10} className={videoSource === 'vidfastpro' ? 'animate-spin' : ''} />
-                                {videoSource === 'vidsrc' ? 'VidSrc (Default)' : 'VidFast (Backup)'}
-                             </button>
-                        </div>
 
                         {isCaptionsOn && (
                            <div className="absolute bottom-10 w-full flex justify-center px-12 z-20">
@@ -1109,34 +1112,57 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                                 )}
 
                                 <div className="space-y-4">
-                                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Subtitle Management</h4>
-                                    <div className="grid gap-3">
-                                        <button 
-                                            onClick={() => window.open(`https://www.opensubtitles.org/en/search/sublanguageid-all/moviename-${encodeURIComponent(selectedMovie.title)}`, '_blank')}
-                                            title="Search on OpenSubtitles" 
-                                            className="w-full py-4 px-6 rounded-2xl bg-neu-base shadow-neu-btn hover:shadow-neu-in text-xs font-bold flex justify-between items-center text-neu-text hover:text-neu-accent transition-all group"
-                                        >
-                                            <span>Search Subtitles</span>
-                                            <Search size={14} className="group-hover:scale-110 transition-transform" />
+                                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Automated Discovery</h4>
+                                    <div className="space-y-3">
+                                        {getSubtitles(selectedMovie).map(sub => (
+                                            <div key={sub.id} className="p-4 bg-neu-base shadow-neu-out rounded-2xl border border-white/50 flex items-center justify-between transition-all hover:scale-[1.02]">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-black text-neu-text tracking-tight">{sub.lang}</span>
+                                                    <span className="text-[8px] text-gray-400 uppercase tracking-widest">{sub.format} • Verified</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <button 
+                                                        onClick={() => downloadSubtitle(sub, selectedMovie.title)}
+                                                        className="w-10 h-10 rounded-xl bg-neu-base shadow-neu-btn flex items-center justify-center text-gray-500 hover:text-neu-accent transition-all"
+                                                        title="Download SRT"
+                                                    >
+                                                        <Download size={16} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => {
+                                                            setActiveSubtitle(sub.id);
+                                                            // In a real scenario, we would append &sub=URL to the iframe source
+                                                            // For this demo, we'll simulate the successful injection
+                                                        }}
+                                                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${activeSubtitle === sub.id ? 'bg-neu-accent text-white shadow-neu-in' : 'bg-neu-base text-gray-500 shadow-neu-btn hover:text-neu-accent'}`}
+                                                        title="Inject to Player"
+                                                    >
+                                                        {activeSubtitle === sub.id ? <Check size={16} /> : <Plus size={16} />}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="h-px bg-gray-200/50 my-2"></div>
+                                    
+                                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">External Upload</h4>
+                                    <div className="relative group">
+                                        <input 
+                                            type="file" 
+                                            aria-label="Upload Subtitle File"
+                                            accept=".srt,.vtt"
+                                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                                            onChange={(e) => {
+                                                if (e.target.files?.length) {
+                                                    alert(`Subtitle "${e.target.files[0].name}" loaded! (Note: External player injection limits may apply)`);
+                                                }
+                                            }}
+                                        />
+                                        <button className="w-full py-4 px-6 rounded-2xl bg-neu-base shadow-neu-btn group-hover:shadow-neu-in text-xs font-bold flex justify-between items-center text-neu-text group-hover:text-neu-accent transition-all pointer-events-none">
+                                            <span>Manual Upload (.srt)</span>
+                                            <Captions size={14} className="group-hover:scale-110 transition-transform" />
                                         </button>
-                                        
-                                        <div className="relative group">
-                                            <input 
-                                                type="file" 
-                                                aria-label="Upload Subtitle File"
-                                                accept=".srt,.vtt"
-                                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
-                                                onChange={(e) => {
-                                                    if (e.target.files?.length) {
-                                                        alert(`Subtitle "${e.target.files[0].name}" loaded! (Note: External player injection limits may apply)`);
-                                                    }
-                                                }}
-                                            />
-                                            <button className="w-full py-4 px-6 rounded-2xl bg-neu-base shadow-neu-btn group-hover:shadow-neu-in text-xs font-bold flex justify-between items-center text-neu-text group-hover:text-neu-accent transition-all pointer-events-none">
-                                                <span>Upload Subtitle (.srt)</span>
-                                                <Captions size={14} className="group-hover:scale-110 transition-transform" />
-                                            </button>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1181,6 +1207,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                  </div> */}
 
                  <div className="flex items-center gap-4 ml-auto">
+                     <button 
+                        onClick={() => setVideoSource(prev => prev === 'vidsrc' ? 'vidfastpro' : 'vidsrc')}
+                        className="px-4 h-12 rounded-xl bg-neu-base shadow-neu-btn active:shadow-neu-in text-[10px] font-bold uppercase tracking-widest text-neu-accent transition-all flex items-center gap-2 group"
+                        title="Switch Video Server"
+                     >
+                        <RefreshCw size={14} className={`transition-all duration-500 ${videoSource === 'vidfastpro' ? 'animate-spin' : 'group-hover:rotate-180'}`} />
+                        <span className="hidden sm:inline">{videoSource === 'vidsrc' ? 'Server: Pluto' : 'Server: Uranus'}</span>
+                     </button>
                      {/* <NeuIconButton onClick={() => setIsCaptionsOn(!isCaptionsOn)} active={isCaptionsOn} className="w-12 h-12 !rounded-xl" title="Captions">
                         <Captions size={20} />
                      </NeuIconButton> */}

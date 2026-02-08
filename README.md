@@ -10,9 +10,9 @@
 - **⚡ Quick & Responsive**: Built with Vite and React for lightning-fast performance.
 - **🎨 Neumorphic Design**: A unique, soft UI design system that stands out from typical flat/material designs.
 - **🤝 Watch Party**: Watch together with friends in real-time! Sync playback and chat using PeerJS (P2P).
-- **🕹️ Fun Mode**: Toggle a retro CRT effect with decade-specific themes (70s, 80s, 90s, 2000s) for a nostalgic viewing experience.
-- **🤖 Xscribe AI**: Analyze scenes on demand using Gemini AI to generate social-media-ready reviews and insights.
 - **💾 Watch Later**: Extensive local storage integration to save your favorite content for later.
+- **💬 Automated Subtitles**: Real-time discovery and valid `.srt` downloads for movies and TV shows.
+- **🕹️ Refined Fun Mode**: Retro CRT visuals with a modern header-based navigation for decade selection.
 - **📱 Fully Mobile Optimized**: Comprehensive responsive design for Dashboard, Archive, and Player across all breakpoints.
 - **✨ Refined Experience**: Cinematic end-to-end intro sequence and modern split-view login interface.
 
