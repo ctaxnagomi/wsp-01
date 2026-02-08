@@ -15,7 +15,6 @@
 - **💾 Watch Later**: extensive local storage integration to save your favorite content for later.
 - **📱 Responsive**: Fully optimized for desktop, tablet, and mobile devices
 
-
 ## 🎮 How to Use
 
 - **Navigation**: Use the category buttons or search bar to find content.

@@ -125,14 +125,14 @@ export const AuthGateway: React.FC<AuthGatewayProps> = ({ onLogin }) => {
                 ))}
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-3 md:gap-4">
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                 <button
                   key={num}
                   title={`Enter ${num}`}
                   type="button"
                   onClick={() => handlePinInput(num)}
-                  className="h-14 rounded-xl text-xl font-bold text-neu-text shadow-neu-btn active:shadow-neu-btn-active hover:text-neu-accent transition-all"
+                  className="h-12 md:h-14 rounded-xl text-lg md:text-xl font-bold text-neu-text shadow-neu-btn active:shadow-neu-btn-active hover:text-neu-accent transition-all"
                 >
                   {num}
                 </button>
@@ -140,15 +140,15 @@ export const AuthGateway: React.FC<AuthGatewayProps> = ({ onLogin }) => {
               <button 
                 title="Clear PIN"
                 onClick={() => setPin('')}
-                className="h-14 rounded-xl text-sm font-bold text-red-400 shadow-neu-btn active:shadow-neu-btn-active"
+                className="h-12 md:h-14 rounded-xl text-xs md:text-sm font-bold text-red-400 shadow-neu-btn active:shadow-neu-btn-active"
               >
                 CLR
               </button>
-              <button onClick={() => handlePinInput(0)} title="Zero" className="h-14 rounded-xl text-xl font-bold text-neu-text shadow-neu-btn active:shadow-neu-btn-active hover:text-neu-accent">0</button>
+              <button onClick={() => handlePinInput(0)} title="Zero" className="h-12 md:h-14 rounded-xl text-lg md:text-xl font-bold text-neu-text shadow-neu-btn active:shadow-neu-btn-active hover:text-neu-accent">0</button>
               <button 
                 title="Submit PIN"
                 onClick={handlePinSubmit}
-                className="h-14 rounded-xl text-neu-accent shadow-neu-btn active:shadow-neu-btn-active flex items-center justify-center"
+                className="h-12 md:h-14 rounded-xl text-neu-accent shadow-neu-btn active:shadow-neu-btn-active flex items-center justify-center"
               >
                 <KeyRound size={20} />
               </button>

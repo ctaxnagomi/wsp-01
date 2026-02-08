@@ -522,7 +522,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
     <div className={`min-h-screen transition-all duration-700 ${funMode ? `fun-mode-active crt-overlay retro-grid-bg ${getFunClass()}` : 'bg-neu-base'}`}>
       <button title="Secret Anchor" className="opacity-0 absolute pointer-events-none">Hidden</button>
       {/* Navbar - Floating & Glassy */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-6 py-4 flex items-center justify-between gap-4 ${isScrolled ? 'bg-neu-base/80 backdrop-blur-xl shadow-neu-out border-b border-white/20' : 'bg-transparent'}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 md:px-6 py-3 md:py-4 flex items-center justify-between gap-4 ${isScrolled ? 'bg-neu-base/80 backdrop-blur-xl shadow-neu-out border-b border-white/20' : 'bg-transparent'}`}>
         <div className="flex items-center gap-8">
             <h1 className="font-bold text-neu-accent tracking-[0.2em] text-2xl cursor-pointer whitespace-nowrap font-imax animate-pulse flex items-center gap-2">
                {funMode && <Monitor size={24} className="text-retro-neon-blue"/>}
@@ -554,7 +554,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
 
         {/* Fun Mode Year Selector Modal/Dropdown */}
         {showFunSelector && (
-            <div className="absolute top-24 left-1/2 -translate-x-1/2 z-50 p-6 bg-neu-base rounded-3xl shadow-neu-out border border-white/30 animate-fade-in w-80">
+            <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 p-6 bg-neu-base rounded-3xl shadow-neu-out border border-white/30 animate-fade-in w-[90vw] max-w-xs md:w-80">
                 <h4 className="text-center font-black text-neu-text uppercase tracking-widest text-xs mb-4">Choose Era</h4>
                 <div className="grid grid-cols-2 gap-3">
                     {[1970, 1980, 1990, 2000, 2010, 2020].map(decade => (
@@ -640,7 +640,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
       </nav>
 
       {/* Hero Section - Cinematic Layout */}
-      <header className="relative w-full h-[95vh] overflow-hidden">
+      <header className="relative w-full min-h-[85vh] md:h-[95vh] overflow-hidden">
         {featuredContent && (
             <>
                 <div className="absolute inset-0 animate-slow-zoom">
@@ -651,7 +651,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                 <div className="absolute inset-0 bg-gradient-to-t from-neu-base via-transparent to-black/20" />
                 <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-neu-base to-transparent" />
                 
-                <div className="absolute inset-0 flex flex-col justify-center px-6 md:px-20 z-10">
+                <div className="absolute inset-0 flex flex-col justify-center px-6 md:px-20 z-10 pt-20 md:pt-0">
                     <div className="max-w-3xl space-y-6 animate-fade-in">
                         <div className="flex items-center gap-3">
                              <span className="glass-dark text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
@@ -662,7 +662,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                              </div>
                         </div>
 
-                        <h2 className="text-6xl md:text-8xl font-black text-neu-text leading-[1.1] font-cinematic drop-shadow-2xl">
+                        <h2 className="text-4xl md:text-8xl font-black text-neu-text leading-[1.1] font-cinematic drop-shadow-2xl">
                             {featuredContent.title}
                         </h2>
                         
@@ -699,7 +699,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                 </div>
 
                 {/* Vertical Sidebar Info (Right) - Retro/Fun Switch */}
-                <div className="absolute right-10 top-1/2 -translate-y-1/2 flex flex-col items-center gap-8 hidden xl:flex z-10 animate-fade-in">
+                <div className="absolute right-4 md:right-10 top-1/2 -translate-y-1/2 flex flex-col items-center gap-8 hidden xl:flex z-10 animate-fade-in">
                      <NeuIconButton 
                         onClick={() => setShowFunSelector(!showFunSelector)}
                         className={`w-14 h-14 !rounded-2xl transition-all duration-500 group ${funMode ? 'shadow-neu-in bg-neu-base border border-retro-neon-pink/50' : 'shadow-neu-out bg-neu-base hover:scale-110'}`}
@@ -1194,10 +1194,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
       {/* ARCHIVE OVERLAY */}
       {showArchive && (
           <div className="fixed inset-0 z-[60] bg-neu-base/95 backdrop-blur-3xl overflow-y-auto animate-fade-in custom-scrollbar">
-              <div className="p-10 flex flex-col gap-10">
+              <div className="p-4 md:p-10 flex flex-col gap-6 md:gap-10">
                   <div className="flex items-center justify-between">
-                      <h1 className="text-4xl font-black text-neu-text font-cinematic uppercase tracking-widest flex items-center gap-4">
-                          <Layers size={40} className="text-neu-accent" />
+                      <h1 className="text-2xl md:text-4xl font-black text-neu-text font-cinematic uppercase tracking-widest flex items-center gap-2 md:gap-4">
+                          <Layers size={24} className="md:w-10 md:h-10 text-neu-accent" />
                           The Archive
                       </h1>
                       <div className="flex items-center gap-6">

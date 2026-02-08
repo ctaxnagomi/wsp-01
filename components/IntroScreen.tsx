@@ -46,19 +46,19 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
             {/* God Rays / Backlight */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] bg-yellow-200/20 rounded-full blur-[120px] animate-pulse"></div>
             
-            <div className="relative mb-12 animate-slow-zoom">
-              <ScrollText size={180} className="text-black/80 wayang-shadow transform rotate-12 opacity-90" strokeWidth={1} />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-black/5 rounded-full blur-xl"></div>
+            <div className="relative mb-8 md:mb-12 animate-slow-zoom">
+              <ScrollText size={120} className="md:w-[180px] md:h-[180px] text-black/80 wayang-shadow transform rotate-12 opacity-90" strokeWidth={1} />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 md:w-48 md:h-48 bg-black/5 rounded-full blur-xl"></div>
             </div>
 
-            <h1 className="text-7xl md:text-9xl font-cinematic text-black/70 tracking-[0.2em] relative">
+            <h1 className="text-5xl md:text-9xl font-cinematic text-black/70 tracking-[0.15em] md:tracking-[0.2em] relative text-center px-4">
               WAYANG
               <span className="absolute -inset-1 blur-md text-black/20 opacity-50">WAYANG</span>
             </h1>
-            <p className="mt-8 font-cinematic text-black/40 tracking-widest text-sm uppercase flex items-center gap-4">
-              <span className="h-px w-12 bg-black/20"></span>
+            <p className="mt-6 md:mt-8 font-cinematic text-black/40 tracking-widest text-xs md:text-sm uppercase flex items-center gap-2 md:gap-4">
+              <span className="h-px w-8 md:w-12 bg-black/20"></span>
               The Origins of Shadow
-              <span className="h-px w-12 bg-black/20"></span>
+              <span className="h-px w-8 md:w-12 bg-black/20"></span>
             </p>
           </div>
         </div>
@@ -72,13 +72,13 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
           <div className="flex flex-col items-center justify-center h-full relative z-10 p-8">
             <div className="max-w-4xl text-center space-y-12">
                <div className="relative inline-block animate-ink-bleed">
-                  <h1 className="text-8xl md:text-[12rem] font-anime text-black leading-none drop-shadow-lg">
+                  <h1 className="text-6xl md:text-[12rem] font-anime text-black leading-none drop-shadow-lg">
                     Seni
                   </h1>
-                  <div className="absolute -bottom-4 left-0 w-full h-2 bg-black rounded-full blur-sm opacity-10"></div>
+                  <div className="absolute -bottom-2 md:-bottom-4 left-0 w-full h-1 md:h-2 bg-black rounded-full blur-sm opacity-10"></div>
                </div>
                
-               <p className="text-xl md:text-3xl font-cinematic text-gray-800 tracking-[0.3em] uppercase animate-fade-in delay-500">
+               <p className="text-lg md:text-3xl font-cinematic text-gray-800 tracking-[0.2em] md:tracking-[0.3em] uppercase animate-fade-in delay-500">
                  The Flourish of Art
                </p>
                
@@ -105,13 +105,13 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
             <div className="absolute bottom-1/4 right-1/4 w-[120%] h-1 bg-blue-500/10 blur-3xl -rotate-6"></div>
 
             <div className="text-center space-y-4 px-6">
-              <h2 className="text-lg md:text-2xl font-cinematic text-blue-200/60 tracking-[1em] uppercase mb-8">
+              <h2 className="text-base md:text-2xl font-cinematic text-blue-200/60 tracking-[0.5em] md:tracking-[1em] uppercase mb-4 md:mb-8">
                 Stage Three
               </h2>
-              <h1 className="text-6xl md:text-9xl font-cinematic text-white tracking-[0.15em] leading-tight drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
+              <h1 className="text-4xl md:text-9xl font-cinematic text-white tracking-[0.1em] md:tracking-[0.15em] leading-tight drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
                 PUJANGGA
               </h1>
-              <div className="h-1 w-32 bg-white/20 mx-auto mt-12 rounded-full overflow-hidden">
+              <div className="h-1 w-20 md:w-32 bg-white/20 mx-auto mt-8 md:mt-12 rounded-full overflow-hidden">
                 <div className="h-full bg-white/60 w-1/2 animate-infinite-scroll"></div>
               </div>
             </div>
@@ -127,19 +127,19 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
           {/* Water Background Effect (Resolving from Act 3) */}
           <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/water.png')] animate-pulse"></div>
 
-          <div className="relative z-10 text-center scale-110 animate-fade-in">
-             <div className="relative inline-block mb-12">
-                <h1 className="text-[10rem] md:text-[15rem] font-black water-text font-imax tracking-tighter drop-shadow-[15px_15px_30px_rgba(163,177,198,0.6)]">
+          <div className="relative z-10 text-center scale-90 md:scale-110 animate-fade-in">
+             <div className="relative inline-block mb-8 md:mb-12">
+                <h1 className="text-7xl md:text-[15rem] font-black water-text font-imax tracking-tighter drop-shadow-[10px_10px_20px_rgba(163,177,198,0.6)] md:drop-shadow-[15px_15px_30px_rgba(163,177,198,0.6)]">
                     WSP
                 </h1>
                 <div className="absolute inset-0 blur-2xl text-blue-500/10 -z-10 animate-pulse">WSP</div>
              </div>
              
              <div className="flex flex-col items-center gap-4">
-                <div className="h-1 w-64 bg-neu-shadowDark/20 rounded-full shadow-neu-in overflow-hidden">
+                <div className="h-1 w-48 md:w-64 bg-neu-shadowDark/20 rounded-full shadow-neu-in overflow-hidden">
                    <div className="h-full bg-neu-accent w-full animate-progress-fast"></div>
                 </div>
-                <p className="font-imax text-neu-accent tracking-[0.5em] text-sm font-bold uppercase">
+                <p className="font-imax text-neu-accent tracking-[0.3em] md:tracking-[0.5em] text-xs md:text-sm font-bold uppercase">
                   Initializing Stream
                 </p>
              </div>

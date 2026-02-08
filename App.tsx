@@ -44,14 +44,16 @@ export default function App() {
   return (
     <div className="min-h-screen text-neu-text selection:bg-neu-accent selection:text-white">
       {!isLoggedIn ? (
-          <div className="h-screen w-full flex flex-col md:grid md:grid-cols-2 overflow-hidden">
-             {/* Left/Top: Intro Sequence (Visualization) */}
-             <div className="h-[40vh] md:h-full w-full relative">
+          <div className="h-[100dvh] w-full relative overflow-hidden bg-black">
+             {/* Layer 1: Intro Sequence (Base Layer) */}
+             <div className="absolute inset-0 z-0">
                  <IntroScreen onComplete={handleIntroComplete} />
              </div>
 
-             {/* Right/Bottom: Auth Gateway */}
-             <div className="flex-1 md:h-full w-full relative shadow-2xl z-20">
+             {/* Layer 2: Auth Gateway (Slide-up Panel) */}
+             <div 
+                className={`absolute inset-0 z-10 transition-transform duration-1000 ease-in-out bg-neu-base ${showIntro ? 'translate-y-full' : 'translate-y-0'}`}
+             >
                  <AuthGateway onLogin={handleLogin} />
              </div>
           </div>
