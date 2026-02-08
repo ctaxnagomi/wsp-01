@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { Movie, UserProfile } from '../types';
 import { generateChatResponse } from '../services/geminiService';
-import { fetchTrending, searchMulti, fetchByDecade, fetchByGenre, fetchAnime } from '../services/tmdb';
+import { fetchTrending, searchMulti, fetchByDecade, fetchByGenre, fetchAnime, fetchByCompany, fetchByQuery } from '../services/tmdb';
 import { watchPartyService, PartyUpdate } from '../services/watchPartyService';
 
 const VIDSRC_URL = import.meta.env.VITE_VIDSRC_URL || 'https://vidnest.fun';
@@ -131,6 +131,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   
   const [trendingMovies, setTrendingMovies] = useState<Movie[]>([]);
   const [recommendedMovies, setRecommendedMovies] = useState<Movie[]>([]);
+  const [pixarMovies, setPixarMovies] = useState<Movie[]>([]);
+  const [disneyMovies, setDisneyMovies] = useState<Movie[]>([]);
+  const [kidsHits, setKidsHits] = useState<Movie[]>([]);
+  const [toddlerMovies, setToddlerMovies] = useState<Movie[]>([]);
+  const [juniorMovies, setJuniorMovies] = useState<Movie[]>([]);
+  const [localHeroes, setLocalHeroes] = useState<Movie[]>([]);
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
@@ -150,6 +156,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   const [funMode, setFunMode] = useState(false);
   const [funYear, setFunYear] = useState<number | null>(null);
   const [showFunSelector, setShowFunSelector] = useState(false);
+  
+  // Kids Mode State
+  const [kidsMode, setKidsMode] = useState(false);
 
   // View Modes
   const [isTheaterMode, setIsTheaterMode] = useState(false);
@@ -313,10 +322,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
             const tvs = await fetchByDecade(funYear, 'tv');
             setTrendingMovies([...movies, ...tvs].sort(() => Math.random() - 0.5));
             setRecommendedMovies(movies);
-         } else if (selectedCategory === 'Originals') {
-            const trending = await fetchTrending();
-            setTrendingMovies(trending);
-            setRecommendedMovies(trending.slice().reverse());
+         } else if (selectedCategory === 'Originals' || kidsMode) { // Fetch kids data if on Originals OR if kidsMode is active
+             const [trending, recommended, pixar, disney, boboiboy, upinipin, toddler, junior, classics, educational] = await Promise.all([
+                 fetchTrending(),
+                 fetchTrending(), // Using trending as fallback for recommended
+                 fetchByCompany(3), // Pixar
+                 fetchByCompany(2), // Disney
+                 fetchByQuery('BoBoiBoy'),
+                 fetchByQuery('Upin & Ipin'),
+                 fetchByGenre(16, 'movie', 'popularity.desc'), // Animation as base for toddler
+                 fetchByGenre(12, 'movie', 'popularity.desc'), // Adventure as base for junior
+                 fetchByQuery('Toy Story Monsters Inc A Bug\'s Life'), // Specific classics
+                 fetchByQuery('Bluey Sesame Street Mickey Mouse Clubhouse Dora') // Educational content
+             ]);
+             setTrendingMovies(trending);
+             setRecommendedMovies(recommended);
+             setPixarMovies([...pixar, ...classics].filter((m: Movie) => m.rating > 7).sort(() => Math.random() - 0.5));
+             setDisneyMovies(disney);
+             setKidsHits([...trending, ...recommended].filter((m: Movie) => m.rating > 8));
+             setLocalHeroes([...boboiboy, ...upinipin]);
+             setToddlerMovies([...educational, ...toddler].filter((m: Movie) => m.genre.includes('Family') || m.genre.includes('Animation')).sort(() => Math.random() - 0.5));
+             setJuniorMovies(junior.filter((m: Movie) => m.rating > 5)); 
          } else if (GENRE_MAP[selectedCategory]) {
             const genreId = GENRE_MAP[selectedCategory];
             // Fetch based on category and current sort
@@ -433,9 +459,36 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
     return () => clearInterval(interval);
   }, [trendingMovies.length, selectedMovie]);
 
-  const featuredContent = trendingMovies.length > 0 ? trendingMovies[currentSlide] : null;
-  const trendingContent = trendingMovies.filter(m => m.id !== featuredContent?.id && (activeTab === 'all' || m.media_type === activeTab));
-  const recommendedContent = recommendedMovies.filter(m => activeTab === 'all' || m.media_type === activeTab);
+  // Kids Mode Filter: Strict Zero-Tolerance
+  const filterKidsContent = (movies: Movie[]) => {
+      if (!kidsMode) return movies;
+      const blacklist = ['fallout', 'gore', 'bloody', 'horror', 'violence', 'zombie', 'dead', 'stranger things', 'bridgerton', 'squid game', 'the last of us', 'the rings of power'];
+      
+      return movies.filter(m => {
+          const title = m.title.toLowerCase();
+          const overview = m.overview.toLowerCase();
+          
+          // 1. Blacklist check
+          if (blacklist.some(word => title.includes(word) || overview.includes(word))) return false;
+          
+          // 2. Genre check: Must have Animation (16) or Family (10751)
+          const isKidsGenre = m.genre.some(g => ['Animation', 'Family'].includes(g));
+          
+          // 3. Fallback check for safe categories if Animation/Family is missing but it's highly rated and safe
+          // Actually, let's stick to the strict rule: Animation or Family is a MUST.
+          return isKidsGenre;
+      });
+  };
+
+  const kidsPool = [...pixarMovies, ...disneyMovies, ...toddlerMovies, ...juniorMovies, ...localHeroes];
+  const carouselPool = kidsMode ? (kidsPool.length > 0 ? kidsPool : filterKidsContent(trendingMovies)) : trendingMovies;
+
+  const featuredContent = carouselPool.length > 0 
+      ? carouselPool[currentSlide % Math.max(1, carouselPool.length)] 
+      : (trendingMovies.length > 0 ? trendingMovies[0] : null); // Fallback to first trending if pool is empty
+
+  const trendingContent = filterKidsContent(trendingMovies).filter(m => m.id !== featuredContent?.id && (activeTab === 'all' || m.media_type === activeTab));
+  const recommendedContent = filterKidsContent(recommendedMovies).filter(m => activeTab === 'all' || m.media_type === activeTab);
   
   // Filter Logic
   let filteredContent = trendingMovies;
@@ -566,89 +619,109 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   };
 
   return (
-    <div className={`min-h-screen transition-all duration-700 ${funMode ? `fun-mode-active crt-overlay retro-grid-bg ${getFunClass()}` : 'bg-neu-base'}`}>
+    <div className={`min-h-screen transition-all duration-700 ${kidsMode ? 'kids-mode-active' : (funMode ? `fun-mode-active crt-overlay retro-grid-bg ${getFunClass()}` : 'bg-neu-base')}`}>
       <button title="Secret Anchor" className="opacity-0 absolute pointer-events-none">Hidden</button>
       {/* Navbar - Floating & Glassy */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 md:px-6 py-2 md:py-4 flex items-center justify-between gap-2 md:gap-4 ${isScrolled ? 'bg-neu-base/80 backdrop-blur-xl shadow-neu-out border-b border-white/20' : 'bg-transparent'}`}>
-        <div className="flex items-center gap-8">
-            <h1 className="font-bold text-neu-accent tracking-[0.2em] text-lg sm:text-2xl cursor-pointer whitespace-nowrap font-imax animate-pulse flex items-center gap-2">
-               {funMode && <Monitor size={24} className="text-retro-neon-blue"/>}
-               WSP {funMode ? 'RETRO' : 'STREAM'}
-            </h1>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-3 md:px-6 py-2 md:py-4 flex items-center justify-between gap-1.5 md:gap-4 ${isScrolled ? 'bg-neu-base/80 backdrop-blur-xl shadow-neu-out border-b border-white/20' : 'bg-transparent'}`}>
+        <div className="flex items-center gap-3 md:gap-8">
+            {!kidsMode && (
+                <h1 className="font-bold text-neu-accent tracking-[0.1em] md:tracking-[0.2em] text-sm sm:text-2xl cursor-pointer whitespace-nowrap font-imax animate-pulse flex items-center gap-1.5 md:gap-2">
+                   {funMode && <Monitor size={18} className="md:w-6 md:h-6 text-retro-neon-blue"/>}
+                   WSP {funMode ? 'RETRO' : 'STREAM'}
+                </h1>
+            )}
             
-            <div className="hidden lg:flex items-center gap-2 bg-neu-base/40 p-1 rounded-2xl shadow-neu-in">
-                {(['all', 'movie', 'tv'] as const).map(tab => (
-                    <button 
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`px-6 py-2 rounded-xl text-xs font-black tracking-widest transition-all ${activeTab === tab ? 'bg-neu-accent text-white shadow-neu-out translate-y-[-2px]' : 'text-gray-500 hover:text-neu-text'}`}
-                    >
-                        {tab.toUpperCase()}
-                    </button>
-                ))}
-            </div>
-            
-            {/* Fun Mode Toggle */}
-            <div className="relative">
-                <button 
-                    title="Toggle Fun Mode Selector"
-                    onClick={() => setShowFunSelector(!showFunSelector)}
-                    className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-xl border-2 transition-all ${funMode ? 'border-retro-neon-pink text-retro-neon-pink' : 'border-neu-accent text-neu-accent'}`}
-                >
-                    <Tv size={14} className="md:w-[18px] md:h-[18px]" />
-                    <span className="font-bold text-[10px] md:text-xs">FUN MODE</span>
-                    <ChevronDown size={14} className={`transition-transform ${showFunSelector ? 'rotate-180' : ''}`} />
-                </button>
+            {!kidsMode && (
+                <div className="hidden lg:flex items-center gap-2 bg-neu-base/40 p-1 rounded-2xl shadow-neu-in">
+                    {(['all', 'movie', 'tv'] as const).map(tab => (
+                        <button 
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`px-6 py-2 rounded-xl text-xs font-black tracking-widest transition-all ${activeTab === tab ? 'bg-neu-accent text-white shadow-neu-out translate-y-[-2px]' : 'text-gray-500 hover:text-neu-text'}`}
+                        >
+                            {tab.toUpperCase()}
+                        </button>
+                    ))}
+                </div>
+            )}
 
-                {/* Fun Mode Year Selector Dropdown */}
-                {showFunSelector && (
-                    <div className="absolute top-full left-0 mt-3 z-50 p-6 bg-neu-base rounded-3xl shadow-neu-out border border-white/30 animate-fade-in w-72 md:w-80">
-                        <h4 className="text-center font-black text-neu-text uppercase tracking-widest text-xs mb-4">Choose Era</h4>
-                        <div className="grid grid-cols-2 gap-3">
-                            {[1970, 1980, 1990, 2000, 2010, 2020].map(decade => (
+            {/* Kids Mode Toggle */}
+            <button 
+                onClick={() => {
+                    setKidsMode(!kidsMode);
+                    if (!kidsMode) setFunMode(false); // Disable fun mode if kids mode enabled
+                }}
+                className={`kids-nav-btn flex-shrink-0 ${kidsMode ? 'animate-kids-bounce' : 'opacity-80'} scale-75 md:scale-100 origin-left`}
+            >
+                <span className="text-[10px] md:text-sm whitespace-nowrap">🧒 KIDS</span>
+            </button>
+
+            
+            {/* Fun Mode Toggle - Hidden in Kids Mode */}
+            {!kidsMode && (
+                <div className="relative">
+                    <button 
+                        title="Toggle Fun Mode Selector"
+                        onClick={() => setShowFunSelector(!showFunSelector)}
+                        className={`flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-xl border-2 transition-all ${funMode ? 'border-retro-neon-pink text-retro-neon-pink' : 'border-neu-accent text-neu-accent'}`}
+                    >
+                        <Tv size={14} className="md:w-[18px] md:h-[18px]" />
+                        <span className="font-bold text-[10px] md:text-xs">FUN MODE</span>
+                        <ChevronDown size={14} className={`transition-transform ${showFunSelector ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {/* Fun Mode Year Selector Dropdown */}
+                    {showFunSelector && (
+                        <div className="absolute top-full left-0 mt-3 z-50 p-6 bg-neu-base rounded-3xl shadow-neu-out border border-white/30 animate-fade-in w-72 md:w-80">
+                            <h4 className="text-center font-black text-neu-text uppercase tracking-widest text-xs mb-4">Choose Era</h4>
+                            <div className="grid grid-cols-2 gap-3">
+                                {[1970, 1980, 1990, 2000, 2010, 2020].map(decade => (
+                                    <button 
+                                        key={decade}
+                                        title={`Select ${decade}s Era`}
+                                        onClick={() => {
+                                            setFunYear(decade);
+                                            setFunMode(true);
+                                            setShowFunSelector(false);
+                                        }}
+                                        className={`py-3 rounded-xl font-bold transition-all ${funYear === decade ? 'bg-neu-accent text-white shadow-neu-in' : 'bg-neu-base shadow-neu-btn text-gray-500 hover:text-neu-accent'}`}
+                                    >
+                                        {decade}s
+                                    </button>
+                                ))}
                                 <button 
-                                    key={decade}
-                                    title={`Select ${decade}s Era`}
+                                    className="col-span-2 py-3 mt-2 rounded-xl font-bold bg-red-400 text-white shadow-neu-btn hover:bg-red-500 transition-colors"
                                     onClick={() => {
-                                        setFunYear(decade);
-                                        setFunMode(true);
+                                        setFunMode(false);
+                                        setFunYear(null);
                                         setShowFunSelector(false);
                                     }}
-                                    className={`py-3 rounded-xl font-bold transition-all ${funYear === decade ? 'bg-neu-accent text-white shadow-neu-in' : 'bg-neu-base shadow-neu-btn text-gray-500 hover:text-neu-accent'}`}
                                 >
-                                    {decade}s
+                                    Disable Fun Mode
                                 </button>
-                            ))}
-                            <button 
-                                className="col-span-2 py-3 mt-2 rounded-xl font-bold bg-red-400 text-white shadow-neu-btn hover:bg-red-500 transition-colors"
-                                onClick={() => {
-                                    setFunMode(false);
-                                    setFunYear(null);
-                                    setShowFunSelector(false);
-                                }}
-                            >
-                                Disable Fun Mode
-                            </button>
+                            </div>
                         </div>
-                    </div>
-                )}
-            </div>
+                    )}
+                </div>
+            )}
         </div>
 
-        <div className="flex-1 max-w-xl mx-4 relative hidden md:block">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+        <div className={`flex-1 max-w-xl mx-4 relative hidden md:block ${kidsMode ? 'kids-btn-hover cursor-pointer' : ''}`}>
+            <Search className={`absolute left-4 top-1/2 -translate-y-1/2 ${kidsMode ? 'text-kids-orange' : 'text-gray-400'}`} size={18} />
             <NeuInput 
-                placeholder="Search stories, legends, cinema..."
+                placeholder={kidsMode ? "Find Your Favorite Cartoons!" : "Search stories, legends, cinema..."}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 bg-white/30 border-white/20 backdrop-blur-sm" 
+                className={`pl-12 backdrop-blur-sm ${kidsMode ? 'bg-white border-kids-black border-4 rounded-2xl' : 'bg-white/30 border-white/20'}`} 
             />
         </div>
           
         <div className="flex items-center gap-4">
-            <NeuIconButton className="hidden sm:flex shadow-neu-out">
-                <Bookmark size={20} />
-            </NeuIconButton>
+            {!kidsMode && (
+                <NeuIconButton className="hidden sm:flex shadow-neu-out">
+                    <Bookmark size={20} />
+                </NeuIconButton>
+            )}
             
             <div className="relative">
                 <button 
@@ -752,7 +825,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
 
                 {/* Carousel Indicators */}
                 <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3">
-                    {trendingMovies.slice(0, 10).map((_, idx) => (
+                    {carouselPool.slice(0, 10).map((_, idx) => (
                         <button
                             key={idx}
                             onClick={() => {
@@ -775,18 +848,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
 
       {/* Main Content Area */}
       <main className="relative z-20 px-4 md:px-6 mt-4 sm:-mt-16 md:-mt-32 space-y-12 md:space-y-16 pb-20">
-         {/* Categories Row */}
-         <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-4 px-2">
-            {['Originals', 'Watch Later', 'Legends', 'Action', 'Sci-Fi', 'Historical', 'Documentary', 'Drama'].map(cat => (
-                <button 
-                    key={cat} 
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-4 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl bg-neu-base shadow-neu-out whitespace-nowrap text-xs sm:text-sm font-bold transition-all hover:translate-y-[-2px] ${selectedCategory === cat ? 'text-neu-accent shadow-neu-in' : 'text-gray-600 hover:text-neu-accent'}`}
-                >
-                    {cat}
-                </button>
-            ))}
-         </div>
+         {/* Categories Row - Hidden in Kids Mode */}
+         {!kidsMode && (
+             <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-4 px-2">
+                {['Originals', 'Watch Later', 'Legends', 'Action', 'Sci-Fi', 'Historical', 'Documentary', 'Drama'].map(cat => (
+                    <button 
+                        key={cat} 
+                        onClick={() => setSelectedCategory(cat)}
+                        className={`px-4 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl bg-neu-base shadow-neu-out whitespace-nowrap text-xs sm:text-sm font-bold transition-all hover:translate-y-[-2px] ${selectedCategory === cat ? 'text-neu-accent shadow-neu-in' : 'text-gray-600 hover:text-neu-accent'}`}
+                    >
+                        {cat}
+                    </button>
+                ))}
+             </div>
+         )}
 
          {/* Trending / Filtered Section */}
          {trendingContent.length > 0 && (
@@ -817,6 +892,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                 movies={trendingContent} 
                 onPlay={(m) => setSelectedMovie(m as any)} 
                 onViewArchive={handleOpenArchive}
+                kidsMode={kidsMode}
             />
          )}
 
@@ -828,17 +904,60 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                 icon={<Eye className="text-neu-accent" size={20}/>}
                 movies={recommendedContent} 
                 onPlay={(m) => setSelectedMovie(m as any)} 
+                kidsMode={kidsMode}
             />
          )}
 
          {/* Watchlist Section */}
-         <Section 
-            title="Parchment List" 
-            subtitle="Pick up where you left off"
-            icon={<Bookmark className="text-neu-accent" size={20}/>}
-            movies={filteredContent.slice(0, 3)} 
-            onPlay={(m) => setSelectedMovie(m as any)} 
-         />
+                   {!kidsMode && (
+            <Section 
+              title="Parchment List" 
+              subtitle="Pick up where you left off" 
+              icon={<Bookmark className="text-neu-accent" size={20}/>} 
+              movies={filteredContent.slice(0, 3)} 
+              onPlay={(m) => setSelectedMovie(m as any)} 
+            />
+          )}
+
+          {kidsMode && (
+              <div className="space-y-12 md:space-y-16">
+                <Section 
+                    title="Little Explorers (Ages 3-5)" 
+                    subtitle="Perfect for tiny adventurers"
+                    movies={toddlerMovies} 
+                    onPlay={(m) => setSelectedMovie(m as any)} 
+                    kidsMode={kidsMode}
+                />
+                <Section 
+                    title="Big Kid Adventures (Ages 6-8)" 
+                    subtitle="Exciting stories for growing heroes"
+                    movies={juniorMovies} 
+                    onPlay={(m) => setSelectedMovie(m as any)} 
+                    kidsMode={kidsMode}
+                />
+                <Section 
+                    title="Local Favorites (BoBoiBoy & Friends)" 
+                    subtitle="The best animation from Malaysia"
+                    movies={localHeroes} 
+                    onPlay={(m) => setSelectedMovie(m as any)} 
+                    kidsMode={kidsMode}
+                />
+                <Section 
+                    title="Pixar Classics" 
+                    subtitle="Magical worlds from Pixar"
+                    movies={pixarMovies} 
+                    onPlay={(m) => setSelectedMovie(m as any)} 
+                    kidsMode={kidsMode}
+                />
+                <Section 
+                    title="Disney Magic" 
+                    subtitle="Enchanting Disney stories"
+                    movies={disneyMovies} 
+                    onPlay={(m) => setSelectedMovie(m as any)} 
+                    kidsMode={kidsMode}
+                />
+              </div>
+          )}
       </main>
 
       {/* Enhanced Video Player Modal */}
@@ -1315,18 +1434,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                         subtitle="Cinematic Masterpieces"
                         movies={archiveData.movies}
                         onPlay={(m) => { setSelectedMovie(m as any); setShowArchive(false); }}
+                        kidsMode={kidsMode}
                       />
                        <Section 
                         title="Top 20 Series" 
                         subtitle="Binge-worthy Collections"
                         movies={archiveData.tv}
                         onPlay={(m) => { setSelectedMovie(m as any); setShowArchive(false); }}
+                        kidsMode={kidsMode}
                       />
                        <Section 
                         title="Top Anime" 
                         subtitle="Animation from Japan"
                         movies={archiveData.anime}
                         onPlay={(m) => { setSelectedMovie(m as any); setShowArchive(false); }}
+                        kidsMode={kidsMode}
                       />
                   </div>
               </div>
@@ -1336,7 +1458,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   );
 };
 
-const Section: React.FC<{ title: string, subtitle?: string, icon?: React.ReactNode, rightElement?: React.ReactNode, movies: Movie[], onPlay: (m: Movie) => void, onViewArchive?: () => void }> = ({ title, subtitle, icon, rightElement, movies, onPlay, onViewArchive }) => (
+const Section: React.FC<{ 
+  title: string, 
+  subtitle?: string, 
+  icon?: React.ReactNode, 
+  rightElement?: React.ReactNode, 
+  movies: Movie[], 
+  onPlay: (m: Movie) => void, 
+  onViewArchive?: () => void,
+  kidsMode?: boolean
+}> = ({ title, subtitle, icon, rightElement, movies, onPlay, onViewArchive, kidsMode }) => (
   <div className="space-y-4 md:space-y-6">
     <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 px-2">
         <div className="space-y-1">
@@ -1359,9 +1490,9 @@ const Section: React.FC<{ title: string, subtitle?: string, icon?: React.ReactNo
         </div>
     </div>
     
-    <div className="flex overflow-x-auto space-x-4 sm:space-x-8 pb-6 sm:pb-10 px-2 sm:px-4 no-scrollbar">
+    <div className={`flex overflow-x-auto gap-4 sm:gap-8 pb-6 sm:pb-10 px-4 sm:px-8 no-scrollbar snap-x snap-mandatory ${kidsMode ? 'px-8' : ''}`}>
       {movies.map(movie => (
-        <div key={movie.id} onClick={() => onPlay(movie)} className="min-w-[160px] sm:min-w-[220px] md:min-w-[280px] group cursor-pointer transition-all">
+        <div key={movie.id} onClick={() => onPlay(movie)} className={`min-w-[140px] sm:min-w-[200px] md:min-w-[260px] snap-start group cursor-pointer transition-all ${kidsMode ? 'kids-card-hover' : ''}`}>
            <div className="relative rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-neu-out mb-3 sm:mb-6 aspect-[10/14] border-2 sm:border-4 border-transparent group-hover:border-neu-accent/30 transition-all">
               <img src={movie.poster_path} alt={movie.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 sm:gap-4">

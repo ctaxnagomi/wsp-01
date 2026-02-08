@@ -52,11 +52,11 @@ export const AuthGateway: React.FC<AuthGatewayProps> = ({ onLogin }) => {
 
   return (
     <div className="h-full w-full flex flex-col items-center justify-center p-8 bg-neu-base">
-      <NeuCard className="w-full max-w-md animate-fade-in relative z-10">
-        <div className="text-center mb-8">
-            <img src="/assets/logo-favi.png" alt="WSP Logo" className="w-24 h-24 mx-auto mb-4 drop-shadow-lg" />
-            <h2 className="text-2xl font-bold text-neu-text tracking-wider">WAYANG SENI PUJANGGA</h2>
-            <p className="text-sm text-gray-500 mt-2">Authentic Streaming Experience</p>
+      <NeuCard className="w-full max-w-md animate-fade-in relative z-10 p-6 md:p-8">
+        <div className="text-center mb-6 md:mb-8">
+            <img src="/assets/logo-favi.png" alt="WSP Logo" className="w-16 h-16 md:w-24 md:h-24 mx-auto mb-3 md:mb-4 drop-shadow-lg" />
+            <h2 className="text-lg md:text-2xl font-bold text-neu-text tracking-wider">WAYANG SENI PUJANGGA</h2>
+            <p className="text-[10px] md:text-sm text-gray-500 mt-1 md:mt-2">Authentic Streaming Experience</p>
         </div>
 
         {/* Mode Switcher */}

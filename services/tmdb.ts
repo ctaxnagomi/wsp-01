@@ -116,3 +116,27 @@ export const fetchAnime = async (sortBy: string = 'popularity.desc'): Promise<Mo
     return [];
   }
 };
+export const fetchByCompany = async (companyId: number): Promise<Movie[]> => {
+  try {
+    const response = await fetch(
+       `${BASE_URL}/discover/movie?api_key=${API_KEY}&with_companies=${companyId}&sort_by=popularity.desc&vote_count.gte=100`
+    );
+    const data = await response.json();
+    return data.results.map(mapTMDBToMovie);
+  } catch (error) {
+    return [];
+  }
+};
+
+export const fetchByQuery = async (query: string): Promise<Movie[]> => {
+  try {
+    const response = await fetch(
+       `${BASE_URL}/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(query)}&include_adult=false`
+    );
+    const data = await response.json();
+    return data.results.map(mapTMDBToMovie);
+  } catch (error) {
+    console.error(`Error searching for query ${query}:`, error);
+    return [];
+  }
+};

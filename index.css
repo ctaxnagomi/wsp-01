@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Bubblegum+Sans&display=swap');
 
 /* FUN MODE BASE */
 .fun-mode-active {
@@ -152,4 +153,21 @@
 
 .crt-curve {
   transform: scale(1.02) perspective(1000px) rotateX(2deg);
+}
+
+.kids-mode-active {
+    font-family: 'Fredoka', sans-serif !important;
+}
+
+.kids-mode-active h1, 
+.kids-mode-active h2, 
+.kids-mode-active h3, 
+.kids-mode-active h4,
+.kids-mode-active .font-cinematic {
+    font-family: 'Bubblegum Sans', cursive !important;
+}
+
+.kids-card-hover:hover {
+    transform: scale(1.05) rotate(1deg);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }

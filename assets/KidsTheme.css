@@ -1,0 +1,88 @@
+/* KIDS MODE THEME */
+:root {
+  --kids-yellow: #FFD700;
+  --kids-orange: #FF8C00;
+  --kids-black: #1A1A1A;
+  --kids-text: #2D2D2D;
+}
+
+.kids-mode-active {
+  background-color: var(--kids-yellow) !important;
+  font-family: 'Comfortaa', 'Quicksand', sans-serif !important;
+  color: var(--kids-black) !important;
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.kids-mode-active .bg-neu-base {
+  background-color: #FFF !important;
+  border: 4px solid var(--kids-black) !important;
+  box-shadow: 8px 8px 0px var(--kids-black) !important;
+  border-radius: 2rem !important;
+}
+
+.kids-mode-active .text-neu-accent {
+  color: var(--kids-orange) !important;
+  -webkit-text-stroke: 1px var(--kids-black);
+}
+
+.kids-mode-active .shadow-neu-out {
+  box-shadow: 6px 6px 0px var(--kids-black) !important;
+}
+
+.kids-mode-active .shadow-neu-in {
+  box-shadow: inset 4px 4px 0px rgba(0,0,0,0.1) !important;
+}
+
+/* CARTOONISH HOVER ANIMATIONS */
+.kids-card-hover {
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.kids-card-hover:hover {
+  transform: scale(1.05) rotate(2deg) translateY(-10px);
+  box-shadow: 12px 12px 0px var(--kids-black) !important;
+}
+
+.kids-btn-hover {
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.kids-btn-hover:hover {
+  transform: scale(1.1) rotate(-2deg);
+  background-color: var(--kids-orange) !important;
+  color: white !important;
+}
+
+@keyframes kids-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-kids-bounce {
+  animation: kids-bounce 2s infinite ease-in-out;
+}
+
+/* NAVIGATION ITEM */
+.kids-nav-btn {
+  background: var(--kids-orange);
+  color: white;
+  border: 3px solid var(--kids-black);
+  box-shadow: 4px 4px 0px var(--kids-black);
+  padding: 0.5rem 1.5rem;
+  font-weight: 900;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.kids-nav-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--kids-black);
+}
+
+.kids-nav-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px var(--kids-black);
+}

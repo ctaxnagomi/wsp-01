@@ -72,9 +72,9 @@ export const ProfileSelector: React.FC<ProfileSelectorProps> = ({ onSelectProfil
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 animate-fade-in">
+    <div className="min-h-screen flex items-center justify-center p-4 md:p-6 animate-fade-in">
       <div className="w-full max-w-4xl text-center">
-        <h1 className="text-4xl font-bold text-neu-text mb-12 tracking-wider">
+        <h1 className="text-2xl md:text-4xl font-bold text-neu-text mb-8 md:mb-12 tracking-wider">
             {profiles.length === 0 ? "Welcome to WSP Stream" : "Who is watching?"}
         </h1>
         
@@ -102,17 +102,17 @@ export const ProfileSelector: React.FC<ProfileSelectorProps> = ({ onSelectProfil
             </div>
         ) : (
             /* Existing Profile Grid */
-            <div className="flex flex-wrap justify-center gap-8">
+            <div className="flex flex-wrap justify-center gap-4 md:gap-8">
             {profiles.map((profile) => (
                 <div key={profile.id} className="group relative">
                 <button
                     title={`Select Profile: ${profile.name}`}
                     onClick={() => onSelectProfile(profile)}
-                    className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-neu-base shadow-neu-out flex items-center justify-center overflow-hidden mb-4 transition-transform transform group-hover:scale-105 active:scale-95 border-4 border-transparent group-hover:border-neu-accent/20"
+                    className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-neu-base shadow-neu-out flex items-center justify-center overflow-hidden mb-2 md:mb-4 transition-transform transform group-hover:scale-105 active:scale-95 border-4 border-transparent group-hover:border-neu-accent/20"
                 >
                     <img src={profile.avatar} alt={profile.name} className="w-full h-full object-cover" />
                 </button>
-                <h3 className="text-xl font-semibold text-neu-text group-hover:text-neu-accent transition-colors">{profile.name}</h3>
+                <h3 className="text-base sm:text-xl font-semibold text-neu-text group-hover:text-neu-accent transition-colors">{profile.name}</h3>
                 
                 <div className="absolute -top-1 -right-1 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button 
@@ -138,11 +138,11 @@ export const ProfileSelector: React.FC<ProfileSelectorProps> = ({ onSelectProfil
                 <button
                 title="Add New Profile"
                 onClick={() => setIsCreating(true)}
-                className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-neu-base shadow-neu-out flex items-center justify-center text-neu-text/50 hover:text-neu-accent transition-all active:shadow-neu-in mb-4"
+                className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-neu-base shadow-neu-out flex items-center justify-center text-neu-text/50 hover:text-neu-accent transition-all active:shadow-neu-in mb-2 md:mb-4"
                 >
-                <Plus size={48} />
+                <Plus size={32} className="md:w-12 md:h-12" />
                 </button>
-                <h3 className="text-xl font-semibold text-neu-text/50">Add Profile</h3>
+                <h3 className="text-base sm:text-xl font-semibold text-neu-text/50">Add Profile</h3>
             </div>
             </div>
         )}
