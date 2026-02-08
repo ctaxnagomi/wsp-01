@@ -12,8 +12,9 @@
 - **🤝 Watch Party**: Watch together with friends in real-time! Sync playback and chat using PeerJS (P2P).
 - **🕹️ Fun Mode**: Toggle a retro CRT effect with decade-specific themes (70s, 80s, 90s, 2000s) for a nostalgic viewing experience.
 - **🤖 Xscribe AI**: Analyze scenes on demand using Gemini AI to generate social-media-ready reviews and insights.
-- **💾 Watch Later**: extensive local storage integration to save your favorite content for later.
-- **📱 Responsive**: Fully optimized for desktop, tablet, and mobile devices
+- **💾 Watch Later**: Extensive local storage integration to save your favorite content for later.
+- **📱 Fully Mobile Optimized**: Comprehensive responsive design for Dashboard, Archive, and Player across all breakpoints.
+- **✨ Refined Experience**: Cinematic end-to-end intro sequence and modern split-view login interface.
 
 ## 🎮 How to Use
 
