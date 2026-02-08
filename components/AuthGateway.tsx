@@ -31,10 +31,10 @@ export const AuthGateway: React.FC<AuthGatewayProps> = ({ onLogin }) => {
   const handlePinSubmit = () => {
     if (pin.length === 5) {
       setLoading(true);
-      // PIN 55555 is the guest/tester PIN
+      // PINS 55555 and 55511 are valid access PINS
       setTimeout(() => {
         setLoading(false);
-        if (pin === "55555") {
+        if (pin === "55555" || pin === "55511") {
           onLogin();
         } else {
           alert("Invalid Access PIN. Access Denied.");
@@ -51,7 +51,7 @@ export const AuthGateway: React.FC<AuthGatewayProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="h-full w-full flex flex-col items-center justify-center p-8 bg-neu-base">
+    <div className="min-h-full w-full flex flex-col items-center justify-center p-4 md:p-8 bg-neu-base overflow-y-auto no-scrollbar">
       <NeuCard className="w-full max-w-md animate-fade-in relative z-10 p-6 md:p-8">
         <div className="text-center mb-6 md:mb-8">
             <img src="/assets/logo-favi.png" alt="WSP Logo" className="w-16 h-16 md:w-24 md:h-24 mx-auto mb-3 md:mb-4 drop-shadow-lg" />
