@@ -7,11 +7,11 @@ import {
   Facebook, Instagram, Twitter, MessageCircle, 
   Maximize, Minimize, SkipForward, Pause, Captions, FileText, Send, Share2,
   AlertCircle, RefreshCw, Tv, Film, Layers, Monitor, Users, Link as LinkIcon, Check,
-  TrendingUp, Clock, Bookmark, PlayCircle, Eye, ScrollText, Loader2, ArrowRight
+  TrendingUp, Clock, Bookmark, PlayCircle, Eye, ScrollText, Loader2, ArrowRight, Sparkles
 } from 'lucide-react';
 import { Movie, UserProfile } from '../types';
 import { generateChatResponse } from '../services/geminiService';
-import { fetchTrending, searchMulti, fetchByDecade } from '../services/tmdb';
+import { fetchTrending, searchMulti, fetchByDecade, fetchByGenre } from '../services/tmdb';
 import { watchPartyService, PartyUpdate } from '../services/watchPartyService';
 
 const VIDSRC_URL = import.meta.env.VITE_VIDSRC_URL || 'https://vidnest.fun';
@@ -169,6 +169,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
 
   // Category & Quick Action State
   const [selectedCategory, setSelectedCategory] = useState('Originals');
+  const [sortBy, setSortBy] = useState('popularity.desc'); // 'popularity.desc' | 'vote_average.desc' | 'primary_release_date.desc'
   const [showHistoryToast, setShowHistoryToast] = useState(false);
   const [showShareToast, setShowShareToast] = useState(false);
   
@@ -177,6 +178,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
       const saved = localStorage.getItem('watchLater');
       return saved ? JSON.parse(saved) : [];
   });
+
+  const GENRE_MAP: Record<string, number> = {
+      'Action': 28,
+      'Sci-Fi': 878,
+      'Historical': 36,
+      'Documentary': 99,
+      'Drama': 18,
+      'Legends': 12, // Adventure
+  };
 
   useEffect(() => {
       localStorage.setItem('watchLater', JSON.stringify(watchLater));
@@ -227,16 +237,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
             const tvs = await fetchByDecade(funYear, 'tv');
             setTrendingMovies([...movies, ...tvs].sort(() => Math.random() - 0.5));
             setRecommendedMovies(movies);
-         } else {
+         } else if (selectedCategory === 'Originals') {
             const trending = await fetchTrending();
             setTrendingMovies(trending);
             setRecommendedMovies(trending.slice().reverse());
+         } else if (GENRE_MAP[selectedCategory]) {
+            const genreId = GENRE_MAP[selectedCategory];
+            // Fetch based on category and current sort
+            const results = await fetchByGenre(genreId, 'movie', sortBy);
+            setTrendingMovies(results.slice(0, 15)); // Top 15 Limit
+         } else if (selectedCategory === 'Watch Later') {
+            // Watch later is handled locally, but we might want to clear trending
+            setTrendingMovies(watchLater);
          }
     };
     loadContent();
 
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [funMode, funYear]);
+  }, [funMode, funYear, selectedCategory, sortBy]); // Re-run when sort or category changes
 
   useEffect(() => {
     const performSearch = async () => {
@@ -636,27 +654,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                     </div>
                 </div>
 
-                {/* Vertical Sidebar Info (Right) */}
-                <div className="absolute right-10 top-1/2 -translate-y-1/2 flex flex-col items-center gap-8 hidden xl:flex z-10">
-                    <div className="flex flex-col items-center gap-2">
-                        <span className="rotate-90 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-6">Trending</span>
-                        <div className="w-[1px] h-32 bg-gradient-to-b from-transparent via-neu-accent to-transparent" />
-                    </div>
-                    <div className="space-y-4">
-                        <NeuIconButton title="Trending Highs" onClick={() => { setSelectedCategory('Originals'); setSearchTerm(''); }} className={`w-12 h-12 !rounded-xl ${selectedCategory === 'Originals' ? 'text-neu-accent' : ''}`}><TrendingUp size={20}/></NeuIconButton>
-                        <NeuIconButton 
-                            title="Share" 
-                            onClick={() => { 
-                                navigator.clipboard.writeText(window.location.href); 
-                                setShowShareToast(true); 
-                                setTimeout(() => setShowShareToast(false), 3000); 
-                            }} 
-                            className="w-12 h-12 !rounded-xl relative"
-                        >
-                            <Share2 size={20}/>
-                            {showShareToast && <div className="absolute right-14 bg-neu-base shadow-neu-out px-3 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap text-green-500 animate-fade-in">Copied!</div>}
-                        </NeuIconButton>
-                    </div>
+                {/* Vertical Sidebar Info (Right) - Retro/Fun Switch */}
+                <div className="absolute right-10 top-1/2 -translate-y-1/2 flex flex-col items-center gap-8 hidden xl:flex z-10 animate-fade-in">
+                     <NeuIconButton 
+                        onClick={() => setShowFunSelector(!showFunSelector)}
+                        className={`w-14 h-14 !rounded-2xl transition-all duration-500 group ${funMode ? 'shadow-neu-in bg-neu-base border border-retro-neon-pink/50' : 'shadow-neu-out bg-neu-base hover:scale-110'}`}
+                        title="Toggle Fun Mode"
+                    >
+                        <Sparkles 
+                            size={24} 
+                            className={`transition-all duration-500 ${funMode ? 'text-retro-neon-pink animate-spin-slow' : 'text-neu-accent group-hover:rotate-12'}`} 
+                        />
+                    </NeuIconButton>
                 </div>
             </>
         )}
@@ -677,12 +686,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
             ))}
          </div>
 
-         {/* Trending Section */}
+         {/* Trending / Filtered Section */}
          {trendingContent.length > 0 && (
              <Section 
-                title="Seni Trending" 
-                subtitle="The most watched stories this week"
-                icon={<TrendingUp className="text-neu-accent" size={20}/>}
+                title={selectedCategory === 'Originals' ? "Seni Trending" : `${selectedCategory} Top 15`}
+                subtitle={selectedCategory === 'Originals' ? "The most watched stories this week" : "Curated selections based on your filter"}
+                icon={selectedCategory === 'Originals' ? <TrendingUp className="text-neu-accent" size={20}/> : <Layers className="text-neu-accent" size={20}/>}
+                rightElement={
+                    // Sort Controls only show for specific categories, not 'Originals' or 'Watch Later'
+                    !['Originals', 'Watch Later'].includes(selectedCategory) && (
+                        <div className="flex gap-2">
+                            {[ 
+                                { label: 'Trending', value: 'popularity.desc' }, 
+                                { label: 'All Time', value: 'vote_average.desc' }, 
+                                { label: 'Latest', value: 'primary_release_date.desc' } 
+                            ].map(sortOption => (
+                                <button
+                                    key={sortOption.value}
+                                    onClick={() => setSortBy(sortOption.value)}
+                                    className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border ${sortBy === sortOption.value ? 'bg-neu-accent text-white border-neu-accent shadow-neu-in' : 'bg-transparent text-gray-500 border-gray-300 hover:text-neu-text'}`}
+                                >
+                                    {sortOption.label}
+                                </button>
+                            ))}
+                        </div>
+                    )
+                }
                 movies={trendingContent} 
                 onPlay={(m) => setSelectedMovie(m as any)} 
             />
@@ -1029,14 +1058,34 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                                 )}
 
                                 <div className="space-y-4">
-                                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Download Streams</h4>
+                                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">Subtitle Management</h4>
                                     <div className="grid gap-3">
-                                        {['Ultra HD 4K', '1080p HEVC', '720p Optimized'].map((q) => (
-                                            <button key={q} title={`Download in ${q}`} className="w-full py-4 px-6 rounded-2xl bg-neu-base shadow-neu-btn hover:shadow-neu-in text-xs font-bold flex justify-between items-center text-neu-text hover:text-neu-accent transition-all group">
-                                                <span>{q}</span>
-                                                <Download size={14} className="group-hover:translate-y-1 transition-transform" />
+                                        <button 
+                                            onClick={() => window.open(`https://www.opensubtitles.org/en/search/sublanguageid-all/moviename-${encodeURIComponent(selectedMovie.title)}`, '_blank')}
+                                            title="Search on OpenSubtitles" 
+                                            className="w-full py-4 px-6 rounded-2xl bg-neu-base shadow-neu-btn hover:shadow-neu-in text-xs font-bold flex justify-between items-center text-neu-text hover:text-neu-accent transition-all group"
+                                        >
+                                            <span>Search Subtitles</span>
+                                            <Search size={14} className="group-hover:scale-110 transition-transform" />
+                                        </button>
+                                        
+                                        <div className="relative group">
+                                            <input 
+                                                type="file" 
+                                                aria-label="Upload Subtitle File"
+                                                accept=".srt,.vtt"
+                                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                                                onChange={(e) => {
+                                                    if (e.target.files?.length) {
+                                                        alert(`Subtitle "${e.target.files[0].name}" loaded! (Note: External player injection limits may apply)`);
+                                                    }
+                                                }}
+                                            />
+                                            <button className="w-full py-4 px-6 rounded-2xl bg-neu-base shadow-neu-btn group-hover:shadow-neu-in text-xs font-bold flex justify-between items-center text-neu-text group-hover:text-neu-accent transition-all pointer-events-none">
+                                                <span>Upload Subtitle (.srt)</span>
+                                                <Captions size={14} className="group-hover:scale-110 transition-transform" />
                                             </button>
-                                        ))}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1101,7 +1150,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   );
 };
 
-const Section: React.FC<{ title: string, subtitle?: string, icon?: React.ReactNode, movies: Movie[], onPlay: (m: Movie) => void }> = ({ title, subtitle, icon, movies, onPlay }) => (
+const Section: React.FC<{ title: string, subtitle?: string, icon?: React.ReactNode, rightElement?: React.ReactNode, movies: Movie[], onPlay: (m: Movie) => void }> = ({ title, subtitle, icon, rightElement, movies, onPlay }) => (
   <div className="space-y-6">
     <div className="flex items-end justify-between px-2">
         <div className="space-y-1">
@@ -1110,7 +1159,10 @@ const Section: React.FC<{ title: string, subtitle?: string, icon?: React.ReactNo
             </h3>
             {subtitle && <p className="text-xs font-bold text-gray-400 uppercase tracking-[0.2em]">{subtitle}</p>}
         </div>
-        <button title="View Full Archive" className="text-xs font-black text-neu-accent uppercase tracking-widest hover:underline px-4 py-2 bg-neu-accent/10 rounded-xl">View Archive</button>
+        <div className="flex items-center gap-4">
+            {rightElement}
+            <button title="View Full Archive" className="text-xs font-black text-neu-accent uppercase tracking-widest hover:underline px-4 py-2 bg-neu-accent/10 rounded-xl">View Archive</button>
+        </div>
     </div>
     
     <div className="flex overflow-x-auto space-x-8 pb-10 px-4 no-scrollbar">

@@ -18,10 +18,14 @@ export const fetchTrending = async (
   }
 };
 
-export const fetchByGenre = async (genreId: number, type: 'movie' | 'tv' = 'movie'): Promise<Movie[]> => {
+export const fetchByGenre = async (
+  genreId: number, 
+  type: 'movie' | 'tv' = 'movie',
+  sortBy: string = 'popularity.desc'
+): Promise<Movie[]> => {
   try {
     const response = await fetch(
-       `${BASE_URL}/discover/${type}?api_key=${API_KEY}&with_genres=${genreId}&sort_by=popularity.desc&vote_count.gte=100`
+       `${BASE_URL}/discover/${type}?api_key=${API_KEY}&with_genres=${genreId}&sort_by=${sortBy}&vote_count.gte=100`
     );
     const data = await response.json();
     return data.results.map(mapTMDBToMovie);

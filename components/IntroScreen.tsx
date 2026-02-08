@@ -19,21 +19,21 @@ export const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
       if (act === 'WAYANG') setAct('SENI');
       else if (act === 'SENI') setAct('PUJANGGA');
       else if (act === 'PUJANGGA') setAct('WSP');
-      else onComplete();
+      else setAct('WAYANG'); // Loop back to start
       setIsTransitioning(false);
     }, 1000);
   };
 
   useEffect(() => {
     if (act === 'WSP') {
-      const timer = setTimeout(() => onComplete(), 4000);
+      const timer = setTimeout(() => nextAct(), 4000); // Auto-loop from end
       return () => clearTimeout(timer);
     }
   }, [act]);
 
   return (
     <div 
-      className="fixed inset-0 z-[100] bg-black overflow-hidden select-none cursor-pointer"
+      className="h-full w-full relative bg-black overflow-hidden select-none"
       onClick={nextAct}
     >
       {/* ACT 1: WAYANG (Shadow Theater) */}

@@ -41,14 +41,20 @@ export default function App() {
     setActiveProfile(null);
   };
 
-  if (showIntro) {
-      return <IntroScreen onComplete={handleIntroComplete} />;
-  }
-
   return (
     <div className="min-h-screen text-neu-text selection:bg-neu-accent selection:text-white">
       {!isLoggedIn ? (
-        <AuthGateway onLogin={handleLogin} />
+          <div className="h-screen w-full flex flex-col md:grid md:grid-cols-2 overflow-hidden">
+             {/* Left/Top: Intro Sequence (Visualization) */}
+             <div className="h-[40vh] md:h-full w-full relative">
+                 <IntroScreen onComplete={handleIntroComplete} />
+             </div>
+
+             {/* Right/Bottom: Auth Gateway */}
+             <div className="flex-1 md:h-full w-full relative shadow-2xl z-20">
+                 <AuthGateway onLogin={handleLogin} />
+             </div>
+          </div>
       ) : !activeProfile ? (
         <ProfileSelector onSelectProfile={handleSelectProfile} />
       ) : (
