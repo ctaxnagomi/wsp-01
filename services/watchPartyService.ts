@@ -29,6 +29,14 @@ class WatchPartyService {
         // userId should be alphanumeric for PeerJS
         const peerId = `wsp-${userId.replace(/[^a-zA-Z0-9]/g, '')}-${Math.floor(Math.random() * 1000)}`;
         this.peer = new Peer(peerId);
+        
+        this.peer.on('open', (id) => {
+            console.log('PeerJS connection opened with ID:', id);
+        });
+
+        this.peer.on('error', (err) => {
+            console.warn('WatchParty: PeerJS connection failed (usually server-side).', err.type);
+        });
 
         this.peer.on('connection', (conn) => {
             this.handleIncomingConnection(conn);

@@ -137,6 +137,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   const [toddlerMovies, setToddlerMovies] = useState<Movie[]>([]);
   const [juniorMovies, setJuniorMovies] = useState<Movie[]>([]);
   const [localHeroes, setLocalHeroes] = useState<Movie[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
@@ -625,8 +635,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-3 md:px-6 py-2 md:py-4 flex items-center justify-between gap-1.5 md:gap-4 ${isScrolled ? 'bg-neu-base/80 backdrop-blur-xl shadow-neu-out border-b border-white/20' : 'bg-transparent'}`}>
         <div className="flex items-center gap-3 md:gap-8">
             {!kidsMode && (
-                <h1 className="font-bold text-neu-accent tracking-[0.1em] md:tracking-[0.2em] text-sm sm:text-2xl cursor-pointer whitespace-nowrap font-imax animate-pulse flex items-center gap-1.5 md:gap-2">
-                   {funMode && <Monitor size={18} className="md:w-6 md:h-6 text-retro-neon-blue"/>}
+                <h1 className="font-bold text-neu-accent tracking-[0.05em] md:tracking-[0.2em] text-[10px] sm:text-2xl cursor-pointer whitespace-nowrap font-imax animate-pulse flex items-center gap-1 md:gap-2">
+                   {funMode && <Monitor size={14} className="md:w-6 md:h-6 text-retro-neon-blue"/>}
                    WSP {funMode ? 'RETRO' : 'STREAM'}
                 </h1>
             )}
@@ -651,9 +661,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                     setKidsMode(!kidsMode);
                     if (!kidsMode) setFunMode(false); // Disable fun mode if kids mode enabled
                 }}
-                className={`kids-nav-btn flex-shrink-0 ${kidsMode ? 'animate-kids-bounce' : 'opacity-80'} scale-75 md:scale-100 origin-left`}
+                className={`kids-nav-btn flex-shrink-0 transition-all duration-500 scale-75 md:scale-110 origin-left`}
             >
-                <span className="text-[10px] md:text-sm whitespace-nowrap">🧒 KIDS</span>
+                <span className={`kids-icon-90s ${kidsMode ? 'animate-wobbly' : 'opacity-60 grayscale-[0.5]'} px-4 py-1`}>
+                    KIDS
+                </span>
             </button>
 
             
@@ -775,14 +787,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                     <div className="absolute inset-0 bg-gradient-to-t from-neu-base via-transparent to-black/20" />
                     <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-neu-base to-transparent" />
                     
-                    <div className="absolute inset-0 flex flex-col justify-end pb-32 px-6 md:px-20 z-10 md:justify-center md:pb-0 md:pt-0">
-                        <div className={`max-w-3xl space-y-6 transition-all duration-700 delay-300 ${isAnimating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
-                            <div className="flex items-center gap-3">
-                                 <span className="glass-dark text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
+                    <div className={`absolute inset-0 flex flex-col justify-end pb-12 sm:pb-32 px-6 md:px-20 z-10 md:justify-center pt-24 md:pt-0`}>
+                        <div className={`max-w-3xl space-y-4 sm:space-y-6 transition-all duration-700 delay-300 ${isAnimating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                                 <span className="glass-dark text-white px-3 py-1 sm:px-4 sm:py-1.5 rounded-full text-[8px] sm:text-[10px] font-black uppercase tracking-[0.2em]">
                                     Featuring
                                  </span>
-                                 <div className="flex items-center text-yellow-500 gap-1 text-sm font-bold">
-                                    <Star size={16} fill="currentColor" /> {featuredContent.rating} IMDb
+                                 <div className="flex items-center text-yellow-500 gap-1 text-[10px] sm:text-sm font-bold bg-black/20 px-3 py-1 rounded-full backdrop-blur-sm">
+                                    <Star size={14} className="sm:w-4 sm:h-4" fill="currentColor" /> {featuredContent.rating} IMDb
                                  </div>
                             </div>
 
@@ -909,32 +921,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
          )}
 
          {/* Watchlist Section */}
-                   {!kidsMode && (
+          {/* Watchlist Section */}
+          {!kidsMode && watchLater.length > 0 && (
             <Section 
               title="Parchment List" 
               subtitle="Pick up where you left off" 
               icon={<Bookmark className="text-neu-accent" size={20}/>} 
-              movies={filteredContent.slice(0, 3)} 
+              movies={watchLater} 
               onPlay={(m) => setSelectedMovie(m as any)} 
+              onRemove={(m) => toggleWatchLater(m)}
             />
           )}
 
           {kidsMode && (
               <div className="space-y-12 md:space-y-16">
-                <Section 
-                    title="Little Explorers (Ages 3-5)" 
-                    subtitle="Perfect for tiny adventurers"
-                    movies={toddlerMovies} 
-                    onPlay={(m) => setSelectedMovie(m as any)} 
-                    kidsMode={kidsMode}
-                />
-                <Section 
-                    title="Big Kid Adventures (Ages 6-8)" 
-                    subtitle="Exciting stories for growing heroes"
-                    movies={juniorMovies} 
-                    onPlay={(m) => setSelectedMovie(m as any)} 
-                    kidsMode={kidsMode}
-                />
                 <Section 
                     title="Local Favorites (BoBoiBoy & Friends)" 
                     subtitle="The best animation from Malaysia"
@@ -1466,8 +1466,9 @@ const Section: React.FC<{
   movies: Movie[], 
   onPlay: (m: Movie) => void, 
   onViewArchive?: () => void,
+  onRemove?: (m: Movie) => void,
   kidsMode?: boolean
-}> = ({ title, subtitle, icon, rightElement, movies, onPlay, onViewArchive, kidsMode }) => (
+}> = ({ title, subtitle, icon, rightElement, movies, onPlay, onViewArchive, onRemove, kidsMode }) => (
   <div className="space-y-4 md:space-y-6">
     <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 px-2">
         <div className="space-y-1">
@@ -1492,8 +1493,8 @@ const Section: React.FC<{
     
     <div className={`flex overflow-x-auto gap-4 sm:gap-8 pb-6 sm:pb-10 px-4 sm:px-8 no-scrollbar snap-x snap-mandatory ${kidsMode ? 'px-8' : ''}`}>
       {movies.map(movie => (
-        <div key={movie.id} onClick={() => onPlay(movie)} className={`min-w-[140px] sm:min-w-[200px] md:min-w-[260px] snap-start group cursor-pointer transition-all ${kidsMode ? 'kids-card-hover' : ''}`}>
-           <div className="relative rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-neu-out mb-3 sm:mb-6 aspect-[10/14] border-2 sm:border-4 border-transparent group-hover:border-neu-accent/30 transition-all">
+        <div key={movie.id} className={`min-w-[140px] sm:min-w-[200px] md:min-w-[260px] snap-start group cursor-pointer transition-all relative ${kidsMode ? 'kids-card-hover' : ''}`}>
+           <div onClick={() => onPlay(movie)} className="relative rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-neu-out mb-3 sm:mb-6 aspect-[10/14] border-2 sm:border-4 border-transparent group-hover:border-neu-accent/30 transition-all">
               <img src={movie.poster_path} alt={movie.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 sm:gap-4">
                  <div className="w-10 h-10 sm:w-16 sm:h-16 glass rounded-full flex items-center justify-center text-white scale-50 group-hover:scale-100 transition-transform">
@@ -1507,8 +1508,18 @@ const Section: React.FC<{
                     {movie.rating} Rating
                  </div>
               </div>
+
+              {onRemove && (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); onRemove(movie); }}
+                    title="Remove from List"
+                    className="absolute top-2 right-2 sm:top-4 sm:right-4 w-8 h-8 sm:w-10 sm:h-10 glass-dark rounded-full flex items-center justify-center text-white/60 hover:text-red-400 hover:bg-black/60 transition-all z-20"
+                  >
+                    <X size={16} />
+                  </button>
+              )}
               
-              {movie.media_type === 'tv' && (
+              {!onRemove && movie.media_type === 'tv' && (
                   <div className="absolute top-2 right-2 sm:top-4 sm:right-4">
                     <div className="bg-neu-accent px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[6px] sm:text-[8px] font-black text-white uppercase tracking-widest shadow-lg">
                         Serial
@@ -1517,7 +1528,7 @@ const Section: React.FC<{
               )}
            </div>
            
-           <div className="space-y-1 sm:space-y-2 px-1 sm:px-2 group-hover:translate-x-1 transition-transform">
+           <div onClick={() => onPlay(movie)} className="space-y-1 sm:space-y-2 px-1 sm:px-2 group-hover:translate-x-1 transition-transform">
                <h4 className="font-black text-neu-text text-sm sm:text-lg truncate tracking-wide">{movie.title}</h4>
                <div className="flex items-center gap-2 sm:gap-3 text-[8px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">
                  <span>{movie.release_date}</span>

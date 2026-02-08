@@ -90,10 +90,10 @@ const mapTMDBToMovie = (item: any): Movie => {
     title: item.title || item.name,
     poster_path: item.poster_path
       ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
-      : "https://via.placeholder.com/500x750",
+      : "https://placehold.co/500x750/1a1a1a/4d4d4d?text=No+Poster",
     backdrop_path: item.backdrop_path
       ? `https://image.tmdb.org/t/p/original${item.backdrop_path}`
-      : "https://via.placeholder.com/1920x1080",
+      : "https://placehold.co/1920x1080/1a1a1a/4d4d4d?text=No+Backdrop",
     overview: item.overview,
     rating: item.vote_average ? parseFloat(item.vote_average.toFixed(1)) : 0,
     release_date:

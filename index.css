@@ -171,3 +171,35 @@
     transform: scale(1.05) rotate(1deg);
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+
+/* 90s KIDS ICON STYLE */
+.kids-icon-90s {
+    font-family: 'Bubblegum Sans', cursive;
+    color: #FF9800; /* Nick Orange */
+    text-shadow: 
+        3px 3px 0px #4CAF50, /* Nick Green */
+        -2px -2px 0px #FFF,
+        6px 6px 0px rgba(0,0,0,0.2);
+    font-size: 1.5rem;
+    letter-spacing: 0.1em;
+    transform: rotate(-3deg);
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.kids-nav-btn:hover .kids-icon-90s {
+    transform: rotate(3deg) scale(1.1);
+    filter: drop-shadow(0 0 10px #FF9800);
+}
+
+@keyframes wobbly {
+    0% { transform: rotate(-3deg) scale(1); }
+    25% { transform: rotate(2deg) scale(1.05); }
+    50% { transform: rotate(-2deg) scale(1); }
+    75% { transform: rotate(3deg) scale(1.05); }
+    100% { transform: rotate(-3deg) scale(1); }
+}
+
+.animate-wobbly {
+    animation: wobbly 2s infinite ease-in-out;
+}
