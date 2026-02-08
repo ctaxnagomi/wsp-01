@@ -142,6 +142,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   const [isPlaying, setIsPlaying] = useState(false);
   const [isCaptionsOn, setIsCaptionsOn] = useState(false);
   
+  // Carousel State
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  
   // Fun Mode State
   const [funMode, setFunMode] = useState(false);
   const [funYear, setFunYear] = useState<number | null>(null);
@@ -414,7 +418,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  const featuredContent = trendingMovies.length > 0 ? trendingMovies[0] : null;
+  // Featuring Carousel Auto-play
+  useEffect(() => {
+    if (trendingMovies.length === 0 || selectedMovie) return;
+    
+    const interval = setInterval(() => {
+        setIsAnimating(true);
+        setTimeout(() => {
+            setCurrentSlide((prev) => (prev + 1) % Math.min(trendingMovies.length, 10));
+            setIsAnimating(false);
+        }, 500); // Half of transition time
+    }, 8000);
+
+    return () => clearInterval(interval);
+  }, [trendingMovies.length, selectedMovie]);
+
+  const featuredContent = trendingMovies.length > 0 ? trendingMovies[currentSlide] : null;
   const trendingContent = trendingMovies.filter(m => m.id !== featuredContent?.id && (activeTab === 'all' || m.media_type === activeTab));
   const recommendedContent = recommendedMovies.filter(m => activeTab === 'all' || m.media_type === activeTab);
   
@@ -674,59 +693,79 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
       <header className="relative w-full min-h-[65vh] sm:min-h-[75vh] md:h-[95vh] overflow-hidden">
         {featuredContent && (
             <>
-                <div className="absolute inset-0 animate-slow-zoom">
-                    <img src={featuredContent.backdrop_path} className="w-full h-full object-cover" alt="Hero" />
-                </div>
-                {/* Gradient Masks */}
-                <div className="absolute inset-0 bg-gradient-to-r from-neu-base via-transparent to-transparent opacity-90" />
-                <div className="absolute inset-0 bg-gradient-to-t from-neu-base via-transparent to-black/20" />
-                <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-neu-base to-transparent" />
-                
-                <div className="absolute inset-0 flex flex-col justify-end pb-32 px-6 md:px-20 z-10 md:justify-center md:pb-0 md:pt-0">
-                    <div className="max-w-3xl space-y-6 animate-fade-in">
-                        <div className="flex items-center gap-3">
-                             <span className="glass-dark text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
-                                Featuring
-                             </span>
-                             <div className="flex items-center text-yellow-500 gap-1 text-sm font-bold">
-                                <Star size={16} fill="currentColor" /> {featuredContent.rating} IMDb
-                             </div>
-                        </div>
+                <div className={`absolute inset-0 transition-all duration-1000 transform ${isAnimating ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}`}>
+                    <div className="absolute inset-0 animate-slow-zoom">
+                        <img src={featuredContent.backdrop_path} className="w-full h-full object-cover" alt="Hero" />
+                    </div>
+                    {/* Gradient Masks */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-neu-base via-transparent to-transparent opacity-90" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-neu-base via-transparent to-black/20" />
+                    <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-neu-base to-transparent" />
+                    
+                    <div className="absolute inset-0 flex flex-col justify-end pb-32 px-6 md:px-20 z-10 md:justify-center md:pb-0 md:pt-0">
+                        <div className={`max-w-3xl space-y-6 transition-all duration-700 delay-300 ${isAnimating ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
+                            <div className="flex items-center gap-3">
+                                 <span className="glass-dark text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
+                                    Featuring
+                                 </span>
+                                 <div className="flex items-center text-yellow-500 gap-1 text-sm font-bold">
+                                    <Star size={16} fill="currentColor" /> {featuredContent.rating} IMDb
+                                 </div>
+                            </div>
 
-                        <h2 className="text-3xl sm:text-5xl md:text-8xl font-black text-neu-text leading-[1.1] font-cinematic drop-shadow-2xl">
-                             {featuredContent.title}
-                         </h2>
-                        
-                        <div className="flex flex-wrap gap-2">
-                            {featuredContent.genre.map(g => (
-                                <span key={g} className="text-xs font-bold text-neu-accent uppercase tracking-widest bg-neu-accent/10 px-3 py-1 rounded-lg">
-                                    {g}
-                                </span>
-                            ))}
-                        </div>
-
-                        <p className="text-gray-600 text-sm sm:text-lg md:text-xl line-clamp-2 sm:line-clamp-3 leading-relaxed max-w-2xl font-medium">
-                            {featuredContent.overview}
-                        </p>
-                        
-                        <div className="flex items-center gap-6 pt-6">
-                              <button 
-                                 onClick={() => setSelectedMovie(featuredContent as any)}
-                                 className="bg-neu-accent text-white px-5 py-3 sm:px-10 sm:py-5 rounded-2xl shadow-neu-out flex items-center gap-3 sm:gap-4 hover:scale-105 active:scale-95 transition-all group"
-                             >
-                                 <Play fill="currentColor" size={18} className="sm:w-6 sm:h-6 group-hover:animate-pulse" /> 
-                                 <span className="font-black text-xs sm:text-lg tracking-widest uppercase">Start Journey</span>
-                             </button>
+                            <h2 className="text-3xl sm:text-5xl md:text-8xl font-black text-neu-text leading-[1.1] font-cinematic drop-shadow-2xl">
+                                 {featuredContent.title}
+                             </h2>
                             
-                            <NeuIconButton 
-                                onClick={() => toggleWatchLater(featuredContent)}
-                                className={`w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center !rounded-2xl group transition-all ${watchLater.some(m => m.id === featuredContent.id) ? '!bg-neu-accent !text-white' : ''}`}
-                                title={watchLater.some(m => m.id === featuredContent.id) ? "Remove from Watch Later" : "Add to Watch Later"}
-                            >
-                                {watchLater.some(m => m.id === featuredContent.id) ? <Check size={20} className="sm:w-6 sm:h-6" /> : <Plus size={20} className="sm:w-6 sm:h-6 group-hover:rotate-90 transition-transform" />}
-                            </NeuIconButton>
+                            <div className="flex flex-wrap gap-2">
+                                {featuredContent.genre.map(g => (
+                                    <span key={g} className="text-xs font-bold text-neu-accent uppercase tracking-widest bg-neu-accent/10 px-3 py-1 rounded-lg">
+                                        {g}
+                                    </span>
+                                ))}
+                            </div>
+
+                            <p className="text-gray-600 text-sm sm:text-lg md:text-xl line-clamp-2 sm:line-clamp-3 leading-relaxed max-w-2xl font-medium">
+                                {featuredContent.overview}
+                            </p>
+                            
+                            <div className="flex items-center gap-6 pt-6">
+                                  <button 
+                                     onClick={() => setSelectedMovie(featuredContent as any)}
+                                     className="bg-neu-accent text-white px-5 py-3 sm:px-10 sm:py-5 rounded-2xl shadow-neu-out flex items-center gap-3 sm:gap-4 hover:scale-105 active:scale-95 transition-all group"
+                                 >
+                                     <Play fill="currentColor" size={18} className="sm:w-6 sm:h-6 group-hover:animate-pulse" /> 
+                                     <span className="font-black text-xs sm:text-lg tracking-widest uppercase">Start Journey</span>
+                                 </button>
+                                
+                                <NeuIconButton 
+                                    onClick={() => toggleWatchLater(featuredContent)}
+                                    className={`w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center !rounded-2xl group transition-all ${watchLater.some(m => m.id === featuredContent.id) ? '!bg-neu-accent !text-white' : ''}`}
+                                    title={watchLater.some(m => m.id === featuredContent.id) ? "Remove from Watch Later" : "Add to Watch Later"}
+                                >
+                                    {watchLater.some(m => m.id === featuredContent.id) ? <Check size={20} className="sm:w-6 sm:h-6" /> : <Plus size={20} className="sm:w-6 sm:h-6 group-hover:rotate-90 transition-transform" />}
+                                </NeuIconButton>
+                            </div>
                         </div>
                     </div>
+                </div>
+
+                {/* Carousel Indicators */}
+                <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3">
+                    {trendingMovies.slice(0, 10).map((_, idx) => (
+                        <button
+                            key={idx}
+                            onClick={() => {
+                                setIsAnimating(true);
+                                setTimeout(() => {
+                                    setCurrentSlide(idx);
+                                    setIsAnimating(false);
+                                }, 500);
+                            }}
+                            className={`h-1.5 rounded-full transition-all duration-500 ${currentSlide === idx ? 'w-8 bg-neu-accent' : 'w-2 bg-gray-400/30 hover:bg-gray-400/50'}`}
+                            title={`Go to slide ${idx + 1}`}
+                        />
+                    ))}
                 </div>
 
                 {/* Vertical Sidebar Info (Right) removed as per request */}
