@@ -1,104 +1,125 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Wayang Seni Pujangga</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Orbitron:wght@400;900&family=Press+Start+2P&family=Zhi+Mang+Xing&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Orbitron:wght@400;900&family=Press+Start+2P&family=Zhi+Mang+Xing&display=swap"
+      rel="stylesheet"
+    />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
           extend: {
             fontFamily: {
-              pixel: ['"Press Start 2P"', 'cursive'],
-              anime: ['"Zhi Mang Xing"', 'cursive'],
-              cinematic: ['"Cinzel"', 'serif'],
-              imax: ['"Orbitron"', 'sans-serif'],
+              pixel: ['"Press Start 2P"', "cursive"],
+              anime: ['"Zhi Mang Xing"', "cursive"],
+              cinematic: ['"Cinzel"', "serif"],
+              imax: ['"Orbitron"', "sans-serif"],
             },
             colors: {
               neu: {
-                base: '#e0e5ec',
-                shadowLight: '#ffffff',
-                shadowDark: '#a3b1c6',
-                text: '#4d4d4d',
-                accent: '#6c5ce7',
-                accentLight: '#a29bfe'
-              }
+                base: "#e0e5ec",
+                shadowLight: "#ffffff",
+                shadowDark: "#a3b1c6",
+                text: "#4d4d4d",
+                accent: "#F59E0B",
+                accentLight: "#FCD34D",
+              },
             },
             boxShadow: {
-              'neu-out': '9px 9px 16px rgb(163,177,198,0.6), -9px -9px 16px rgba(255,255,255, 0.5)',
-              'neu-out-sm': '4px 4px 8px rgb(163,177,198,0.4), -4px -4px 8px rgba(255,255,255, 0.4)',
-              'neu-in': 'inset 6px 6px 10px 0 rgba(163,177,198, 0.7), inset -6px -6px 10px 0 rgba(255,255,255, 0.8)',
-              'neu-btn': '6px 6px 10px 0 rgba(163,177,198, 0.7), -6px -6px 10px 0 rgba(255,255,255, 0.8)',
-              'neu-btn-active': 'inset 4px 4px 8px 0 rgba(163,177,198, 0.7), inset -4px -4px 8px 0 rgba(255,255,255, 0.8)',
+              "neu-out":
+                "9px 9px 16px rgb(163,177,198,0.6), -9px -9px 16px rgba(255,255,255, 0.5)",
+              "neu-out-sm":
+                "4px 4px 8px rgb(163,177,198,0.4), -4px -4px 8px rgba(255,255,255, 0.4)",
+              "neu-in":
+                "inset 6px 6px 10px 0 rgba(163,177,198, 0.7), inset -6px -6px 10px 0 rgba(255,255,255, 0.8)",
+              "neu-btn":
+                "6px 6px 10px 0 rgba(163,177,198, 0.7), -6px -6px 10px 0 rgba(255,255,255, 0.8)",
+              "neu-btn-active":
+                "inset 4px 4px 8px 0 rgba(163,177,198, 0.7), inset -4px -4px 8px 0 rgba(255,255,255, 0.8)",
             },
             animation: {
-              'flicker': 'flicker 3s infinite',
-              'film-grain': 'grain 0.5s steps(1) infinite',
-              'ink-bleed': 'inkBleed 4s ease-out forwards',
-              'slow-zoom': 'slowZoom 20s linear infinite',
-              'water-flow': 'waterFlow 3s ease infinite',
-              'float': 'float 6s ease-in-out infinite',
+              flicker: "flicker 3s infinite",
+              "film-grain": "grain 0.5s steps(1) infinite",
+              "ink-bleed": "inkBleed 4s ease-out forwards",
+              "slow-zoom": "slowZoom 20s linear infinite",
+              "water-flow": "waterFlow 3s ease infinite",
+              float: "float 6s ease-in-out infinite",
             },
             keyframes: {
               flicker: {
-                '0%, 100%': { opacity: '0.9' },
-                '50%': { opacity: '1' },
-                '70%': { opacity: '0.85' },
+                "0%, 100%": { opacity: "0.9" },
+                "50%": { opacity: "1" },
+                "70%": { opacity: "0.85" },
               },
               grain: {
-                '0%, 100%': { transform: 'translate(0, 0)' },
-                '10%': { transform: 'translate(-5%, -5%)' },
-                '30%': { transform: 'translate(5%, 10%)' },
-                '50%': { transform: 'translate(-10%, 5%)' },
-                '70%': { transform: 'translate(10%, -10%)' },
+                "0%, 100%": { transform: "translate(0, 0)" },
+                "10%": { transform: "translate(-5%, -5%)" },
+                "30%": { transform: "translate(5%, 10%)" },
+                "50%": { transform: "translate(-10%, 5%)" },
+                "70%": { transform: "translate(10%, -10%)" },
               },
               inkBleed: {
-                '0%': { filter: 'blur(20px)', opacity: '0', transform: 'scale(0.8)' },
-                '100%': { filter: 'blur(0px)', opacity: '1', transform: 'scale(1)' },
+                "0%": {
+                  filter: "blur(20px)",
+                  opacity: "0",
+                  transform: "scale(0.8)",
+                },
+                "100%": {
+                  filter: "blur(0px)",
+                  opacity: "1",
+                  transform: "scale(1)",
+                },
               },
               slowZoom: {
-                '0%': { transform: 'scale(1)' },
-                '100%': { transform: 'scale(1.1)' },
+                "0%": { transform: "scale(1)" },
+                "100%": { transform: "scale(1.1)" },
               },
               waterFlow: {
-                '0%': { backgroundPosition: '0% 50%' },
-                '50%': { backgroundPosition: '100% 50%' },
-                '100%': { backgroundPosition: '0% 50%' },
+                "0%": { backgroundPosition: "0% 50%" },
+                "50%": { backgroundPosition: "100% 50%" },
+                "100%": { backgroundPosition: "0% 50%" },
               },
               float: {
-                '0%, 100%': { transform: 'translateY(0)' },
-                '50%': { transform: 'translateY(-10px)' },
-              }
-            }
-          }
-        }
-      }
+                "0%, 100%": { transform: "translateY(0)" },
+                "50%": { transform: "translateY(-10px)" },
+              },
+            },
+          },
+        },
+      };
     </script>
     <style>
       body {
         background-color: #e0e5ec;
         color: #4d4d4d;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         overscroll-behavior: none;
       }
-      .no-scrollbar::-webkit-scrollbar { display: none; }
-      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
       .glass {
         background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(12px);
         border: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .glass-dark {
         background: rgba(0, 0, 0, 0.4);
-        backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
         border: 1px solid rgba(255, 255, 255, 0.05);
       }
 
@@ -108,7 +129,7 @@
         height: 200%;
         top: -50%;
         left: -50%;
-        background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+        background-image: url("https://www.transparenttextures.com/patterns/stardust.png");
         pointer-events: none;
         z-index: 10;
       }
@@ -127,28 +148,29 @@
       }
 
       .wayang-shadow {
-        filter: drop-shadow(0 0 15px rgba(0,0,0,0.8));
+        filter: drop-shadow(0 0 15px rgba(0, 0, 0, 0.8));
       }
 
       .hero-mask {
+        -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
         mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
       }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.561.0"
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
-</head>
+    <script type="importmap">
+      {
+        "imports": {
+          "react/": "https://esm.sh/react@^19.2.3/",
+          "react": "https://esm.sh/react@^19.2.3",
+          "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+          "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
+          "lucide-react": "https://esm.sh/lucide-react@^0.561.0"
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="/index.css" />
+  </head>
   <body>
     <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
-</body>
+    <script type="module" src="/index.tsx"></script>
+  </body>
 </html>

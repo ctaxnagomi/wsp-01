@@ -6,7 +6,7 @@ import {
   X as CloseIcon, ChevronLeft, ChevronRight, Download, Copy, 
   Facebook, Instagram, Twitter, MessageCircle, 
   Maximize, Minimize, SkipForward, Pause, Captions, FileText, Send, Share2,
-  AlertCircle, RefreshCw, Tv, Film, Layers, Monitor, Users, Link as LinkIcon,
+  AlertCircle, RefreshCw, Tv, Film, Layers, Monitor, Users, Link as LinkIcon, Check,
   TrendingUp, Clock, Bookmark, PlayCircle, Eye, ScrollText, Loader2, ArrowRight
 } from 'lucide-react';
 import { Movie, UserProfile } from '../types';
@@ -164,12 +164,39 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   const [isJoining, setIsJoining] = useState(false);
   const [joinInput, setJoinInput] = useState('');
   const playerContainerRef = useRef<HTMLDivElement>(null);
-  const partyChatEndRef = useRef<HTMLDivElement>(null);
+  const [partyChatEndRef] = useState(useRef<HTMLDivElement>(null)); // Ref pattern adjustment if needed, but keeping original ref logic is better
+  const partyChatEndRefOriginal = useRef<HTMLDivElement>(null);
+
+  // Category & Quick Action State
+  const [selectedCategory, setSelectedCategory] = useState('Originals');
+  const [showHistoryToast, setShowHistoryToast] = useState(false);
+  const [showShareToast, setShowShareToast] = useState(false);
+  
+  // Watch Later State
+  const [watchLater, setWatchLater] = useState<Movie[]>(() => {
+      const saved = localStorage.getItem('watchLater');
+      return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+      localStorage.setItem('watchLater', JSON.stringify(watchLater));
+  }, [watchLater]);
+
+  const toggleWatchLater = (movie: Movie) => {
+      setWatchLater(prev => {
+          if (prev.some(m => m.id === movie.id)) {
+              return prev.filter(m => m.id !== movie.id);
+          } else {
+              return [...prev, movie];
+          }
+      });
+  };
 
   // TV Show Specific State
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
   const [sxeInput, setSxeInput] = useState('S1E1');
+  const [videoSource, setVideoSource] = useState<'vidsrc' | 'vidfastpro'>('vidsrc');
 
   const handleSxEChange = (val: string) => {
     setSxeInput(val);
@@ -238,6 +265,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
         setIsFullscreen(false);
         setSelectedSeason(1);
         setSelectedEpisode(1);
+        setVideoSource('vidsrc');
     }
   }, [selectedMovie]);
 
@@ -299,7 +327,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   const featuredContent = trendingMovies.length > 0 ? trendingMovies[0] : null;
   const trendingContent = trendingMovies.filter(m => m.id !== featuredContent?.id && (activeTab === 'all' || m.media_type === activeTab));
   const recommendedContent = recommendedMovies.filter(m => activeTab === 'all' || m.media_type === activeTab);
-  const filteredContent = trendingMovies;
+  
+  // Filter Logic
+  let filteredContent = trendingMovies;
+  if (selectedCategory === 'Watch Later') {
+      filteredContent = watchLater;
+  }
 
   const toggleFullscreen = async () => {
     if (!playerContainerRef.current) return;
@@ -525,6 +558,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                       <p className="font-bold text-neu-text truncate text-lg">{user.name}</p>
                     </div>
                     <button 
+                      onClick={() => { setSelectedCategory('Watch Later'); setShowProfileMenu(false); }}
+                      className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-600 hover:text-neu-accent hover:bg-white/40 transition-all text-sm font-bold"
+                    >
+                      <Clock size={18} />
+                      <span>My Watch List</span>
+                    </button>
+                    <button 
                       onClick={onSwitchProfile}
                       className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-600 hover:text-neu-accent hover:bg-white/40 transition-all text-sm font-bold"
                     >
@@ -577,7 +617,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                         </p>
                         
                         <div className="flex items-center gap-6 pt-6">
-                            <button 
+                             <button 
                                 onClick={() => setSelectedMovie(featuredContent as any)}
                                 className="bg-neu-accent text-white px-10 py-5 rounded-2xl shadow-neu-out flex items-center gap-4 hover:scale-105 active:scale-95 transition-all group"
                             >
@@ -585,8 +625,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                                 <span className="font-black text-lg tracking-widest uppercase">Start Journey</span>
                             </button>
                             
-                            <NeuIconButton className="w-16 h-16 flex items-center justify-center !rounded-2xl group">
-                                <Plus size={24} className="group-hover:rotate-90 transition-transform" />
+                            <NeuIconButton 
+                                onClick={() => toggleWatchLater(featuredContent)}
+                                className={`w-16 h-16 flex items-center justify-center !rounded-2xl group transition-all ${watchLater.some(m => m.id === featuredContent.id) ? '!bg-neu-accent !text-white' : ''}`}
+                                title={watchLater.some(m => m.id === featuredContent.id) ? "Remove from Watch Later" : "Add to Watch Later"}
+                            >
+                                {watchLater.some(m => m.id === featuredContent.id) ? <Check size={24} /> : <Plus size={24} className="group-hover:rotate-90 transition-transform" />}
                             </NeuIconButton>
                         </div>
                     </div>
@@ -599,9 +643,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                         <div className="w-[1px] h-32 bg-gradient-to-b from-transparent via-neu-accent to-transparent" />
                     </div>
                     <div className="space-y-4">
-                        <NeuIconButton title="Trending Highs" className="w-12 h-12 !rounded-xl"><TrendingUp size={20}/></NeuIconButton>
-                        <NeuIconButton title="Watch History" className="w-12 h-12 !rounded-xl"><Clock size={20}/></NeuIconButton>
-                        <NeuIconButton title="Refer Friend" className="w-12 h-12 !rounded-xl"><Share2 size={20}/></NeuIconButton>
+                        <NeuIconButton title="Trending Highs" onClick={() => { setSelectedCategory('Originals'); setSearchTerm(''); }} className={`w-12 h-12 !rounded-xl ${selectedCategory === 'Originals' ? 'text-neu-accent' : ''}`}><TrendingUp size={20}/></NeuIconButton>
+                        <NeuIconButton 
+                            title="Share" 
+                            onClick={() => { 
+                                navigator.clipboard.writeText(window.location.href); 
+                                setShowShareToast(true); 
+                                setTimeout(() => setShowShareToast(false), 3000); 
+                            }} 
+                            className="w-12 h-12 !rounded-xl relative"
+                        >
+                            <Share2 size={20}/>
+                            {showShareToast && <div className="absolute right-14 bg-neu-base shadow-neu-out px-3 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap text-green-500 animate-fade-in">Copied!</div>}
+                        </NeuIconButton>
                     </div>
                 </div>
             </>
@@ -612,8 +666,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
       <main className="relative z-20 px-6 -mt-32 space-y-16 pb-20">
          {/* Categories Row */}
          <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-4 px-2">
-            {['Originals', 'Legends', 'Action', 'Sci-Fi', 'Historical', 'Anime', 'Documentary', 'Drama'].map(cat => (
-                <button key={cat} className="px-8 py-4 rounded-2xl bg-neu-base shadow-neu-out whitespace-nowrap text-sm font-bold text-gray-600 hover:text-neu-accent transition-all hover:translate-y-[-2px]">
+            {['Originals', 'Watch Later', 'Legends', 'Action', 'Sci-Fi', 'Historical', 'Documentary', 'Drama'].map(cat => (
+                <button 
+                    key={cat} 
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`px-8 py-4 rounded-2xl bg-neu-base shadow-neu-out whitespace-nowrap text-sm font-bold transition-all hover:translate-y-[-2px] ${selectedCategory === cat ? 'text-neu-accent shadow-neu-in' : 'text-gray-600 hover:text-neu-accent'}`}
+                >
                     {cat}
                 </button>
             ))}
@@ -777,9 +835,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                         
                         <iframe 
                             className="w-full h-full rounded-sm" 
-                            src={selectedMovie.media_type === 'movie' 
-                                ? `${VIDSRC_URL}/movie/${selectedMovie.id}`
-                                : `${VIDSRC_URL}/tv/${selectedMovie.id}/${selectedSeason}/${selectedEpisode}`
+                            src={
+                                videoSource === 'vidsrc' 
+                                ? (selectedMovie.media_type === 'movie' 
+                                    ? `${VIDSRC_URL}/movie/${selectedMovie.id}?iframe=true&controls=0&showinfo=0&modestbranding=1&autoplay=1`
+                                    : `${VIDSRC_URL}/tv/${selectedMovie.id}/${selectedSeason}/${selectedEpisode}?iframe=true&controls=0&showinfo=0&modestbranding=1&autoplay=1`)
+                                : (selectedMovie.media_type === 'movie'
+                                    ? `https://vidfast.pro/movie/${selectedMovie.id}?autoPlay=true&theme=F59E0B`
+                                    : `https://vidfast.pro/tv/${selectedMovie.id}/${selectedSeason}/${selectedEpisode}?autoPlay=true&theme=F59E0B&autoNext=true&nextButton=true`)
                             }
                             allow="autoplay; encrypted-media" 
                             allowFullScreen
@@ -791,6 +854,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                                 S{selectedSeason} • E{selectedEpisode}
                             </div>
                         )}
+
+                        <div className="absolute bottom-[-3rem] right-0 flex items-center gap-2">
+                             <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Server:</span>
+                             <button 
+                                onClick={() => setVideoSource(prev => prev === 'vidsrc' ? 'vidfastpro' : 'vidsrc')}
+                                className="px-3 py-1 rounded-lg bg-neu-base shadow-neu-out hover:shadow-neu-in text-[10px] font-black uppercase tracking-widest text-neu-accent transition-all flex items-center gap-2"
+                             >
+                                <RefreshCw size={10} className={videoSource === 'vidfastpro' ? 'animate-spin' : ''} />
+                                {videoSource === 'vidsrc' ? 'VidSrc (Default)' : 'VidFast (Backup)'}
+                             </button>
+                        </div>
 
                         {isCaptionsOn && (
                            <div className="absolute bottom-10 w-full flex justify-center px-12 z-20">

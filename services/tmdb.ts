@@ -18,6 +18,19 @@ export const fetchTrending = async (
   }
 };
 
+export const fetchByGenre = async (genreId: number, type: 'movie' | 'tv' = 'movie'): Promise<Movie[]> => {
+  try {
+    const response = await fetch(
+       `${BASE_URL}/discover/${type}?api_key=${API_KEY}&with_genres=${genreId}&sort_by=popularity.desc&vote_count.gte=100`
+    );
+    const data = await response.json();
+    return data.results.map(mapTMDBToMovie);
+  } catch (error) {
+    console.error(`Error fetching genre ${genreId}:`, error);
+    return [];
+  }
+};
+
 export const fetchByDecade = async (decade: number, type: 'movie' | 'tv' = 'movie'): Promise<Movie[]> => {
   try {
     const startYear = decade;
