@@ -1199,7 +1199,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                   <button 
                     title="Close Player"
                     onClick={() => setSelectedMovie(null)} 
-                    className={`absolute top-8 z-50 w-10 h-10 glass-dark rounded-full flex items-center justify-center text-white/40 hover:text-white transition-all border border-white/10 ${rightTabOpen ? "right-[24rem]" : "right-8"}`}
+                    className={`absolute top-8 z-50 w-10 h-10 glass-dark rounded-full flex items-center justify-center text-white/40 hover:text-white transition-all border border-white/10 ${(rightTabOpen || leftTabOpen) ? "opacity-0 pointer-events-none" : "right-8"}`}
                   >
                     <X size={14} />
                   </button>
@@ -1208,7 +1208,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
               <div className="flex-1 relative flex overflow-hidden bg-black">
                 
                 {/* LEFT PANEL: AI & Transcription */}
-                <div className={`absolute left-0 top-0 bottom-0 z-40 glass-base border-r border-white/10 transition-all duration-500 flex flex-col ${leftTabOpen ? 'w-[22rem] translate-x-0' : 'w-[22rem] -translate-x-full'}`}>
+                <div className={`absolute left-0 top-0 bottom-0 z-[60] glass-base border-r border-white/10 transition-all duration-500 flex flex-col ${leftTabOpen ? 'w-[22rem] translate-x-0' : 'w-[22rem] -translate-x-full'}`}>
                     <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
                         <div className="flex flex-col">
                             <h3 className="font-bold text-white flex items-center gap-2 uppercase tracking-widest text-sm">
@@ -1388,7 +1388,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                 </button>
 
                 {/* RIGHT PANEL: Party & Stats */}
-                <div className={`absolute right-0 top-0 bottom-0 z-40 glass-base border-l border-white/10 transition-all duration-500 flex flex-col ${rightTabOpen ? 'w-[22rem] translate-x-0' : 'w-[22rem] translate-x-full'}`}>
+                <div className={`absolute right-0 top-0 bottom-0 z-[60] glass-base border-l border-white/10 transition-all duration-500 flex flex-col ${rightTabOpen ? 'w-[22rem] translate-x-0' : 'w-[22rem] translate-x-full'}`}>
                     {isWatchParty ? (
                         <div className="flex flex-col h-full">
                              <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
