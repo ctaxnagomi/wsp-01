@@ -1,160 +1,93 @@
-import React, { useState, useEffect } from 'react';
-import { Sparkles, ScrollText, Play, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 
 interface IntroScreenProps {
   onComplete: () => void;
-  initialAct?: Act;
 }
 
-type Act = 'WAYANG' | 'SENI' | 'PUJANGGA' | 'WSP';
+interface EmberData { id: number, left: string, size: string, duration: string, delay: string }
 
-export const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete, initialAct }) => {
-  const [act, setAct] = useState<Act>(initialAct || 'WAYANG');
-  const [isTransitioning, setIsTransitioning] = useState(false);
+const Ember: React.FC<{ data: EmberData }> = ({ data }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (ref.current) {
+      ref.current.style.setProperty('--ember-left', data.left);
+      ref.current.style.setProperty('--ember-size', data.size);
+      ref.current.style.setProperty('--ember-duration', data.duration);
+      ref.current.style.setProperty('--ember-delay', data.delay);
+    }
+  }, [data]);
+  return <div ref={ref} className="silksong-ember" />;
+};
 
-  const nextAct = () => {
-    if (isTransitioning) return;
+export const IntroScreen: React.FC<IntroScreenProps> = ({ onComplete }) => {
+  const [isExpanding, setIsExpanding] = useState(false);
+  const [showLogo, setShowLogo] = useState(false);
+  const [embers, setEmbers] = useState<{ id: number, left: string, size: string, duration: string, delay: string }[]>([]);
+
+  useEffect(() => {
+    // Generate random embers
+    const newEmbers = Array.from({ length: 20 }).map((_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      size: `${Math.random() * 4 + 2}px`,
+      duration: `${Math.random() * 3 + 2}s`,
+      delay: `${Math.random() * 5}s`
+    }));
+    setEmbers(newEmbers);
+
+    // Stage 1: Show Logo with Fade & Glow
+    const logoTimer = setTimeout(() => setShowLogo(true), 800);
     
-    setIsTransitioning(true);
-    setTimeout(() => {
-      if (act === 'WAYANG') setAct('SENI');
-      else if (act === 'SENI') setAct('PUJANGGA');
-      else if (act === 'PUJANGGA') setAct('WSP');
-      else if (act === 'WSP') onComplete(); // End to end, no loop
-      setIsTransitioning(false);
-    }, 1000);
-  };
+    // Stage 2: Start Expansion Animation
+    const expandTimer = setTimeout(() => setIsExpanding(true), 3500);
+    
+    // Stage 3: Complete Intro
+    const completeTimer = setTimeout(() => onComplete(), 5500);
 
-//   useEffect(() => {
-//     if (act === 'WSP') {
-//       const timer = setTimeout(() => nextAct(), 4000); // Auto-loop from end
-//       return () => clearTimeout(timer);
-//     }
-//   }, [act]);
+    return () => {
+      clearTimeout(logoTimer);
+      clearTimeout(expandTimer);
+      clearTimeout(completeTimer);
+    };
+  }, [onComplete]);
 
   return (
-    <div 
-      className="h-full w-full relative bg-black overflow-hidden select-none"
-      onClick={nextAct}
-    >
-      {/* ACT 1: WAYANG (Shadow Theater) */}
-      {act === 'WAYANG' && (
-        <div className={`absolute inset-0 transition-opacity duration-1000 ${isTransitioning ? 'opacity-0 scale-110' : 'opacity-100'}`}>
-          <div className="absolute inset-0 parchment animate-flicker"></div>
-          <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]"></div>
-          
-          <div className="flex flex-col items-center justify-center h-full relative z-10">
-            {/* God Rays / Backlight */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] bg-yellow-200/20 rounded-full blur-[120px] animate-pulse"></div>
-            
-            <div className="relative mb-8 md:mb-12 animate-slow-zoom">
-              <ScrollText size={120} className="md:w-[180px] md:h-[180px] text-black/80 wayang-shadow transform rotate-12 opacity-90" strokeWidth={1} />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 md:w-48 md:h-48 bg-black/5 rounded-full blur-xl"></div>
-            </div>
+    <div className="h-full w-full relative bg-[#020202] overflow-hidden flex items-center justify-center select-none">
+      {/* ATMOSPHERIC BACKGROUND (SILKSONG STYLE) */}
+      <div className={`absolute inset-0 transition-all duration-[2000ms] ease-out ${isExpanding ? 'scale-150 opacity-0' : 'scale-100 opacity-100'}`}>
+        
+        {/* Deep Atmosphere Glow */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#2a1a0a] via-[#0a0a0a] to-black opacity-60"></div>
+        
+        {/* God Rays / Backlight */}
+        <div className="absolute inset-0 silksong-god-rays opacity-30"></div>
 
-            <h1 className="text-[12vmin] font-cinematic text-black/70 tracking-[0.2em] relative text-center px-4">
-              WAYANG
-              <span className="absolute -inset-1 blur-md text-black/20 opacity-50">WAYANG</span>
-            </h1>
-            <p className="mt-6 md:mt-8 font-cinematic text-black/40 tracking-widest text-xs md:text-sm uppercase flex items-center gap-2 md:gap-4">
-              <span className="h-px w-8 md:w-12 bg-black/20"></span>
-              The Origins of Shadow
-              <span className="h-px w-8 md:w-12 bg-black/20"></span>
-            </p>
+        {/* Far Silhouette Layer */}
+        <div className="intro-silhouette-far opacity-50"></div>
+        
+        {/* Middle Silhouette Layer */}
+        <div className="intro-silhouette-mid"></div>
+        
+        {/* Foreground Silhouette Layer */}
+        <div className="intro-silhouette-near"></div>
+
+        {embers.map(ember => <Ember key={ember.id} data={ember} />)}
+      </div>
+
+      {/* Main Cinematic Logo */}
+      <div className={`relative z-10 transition-all duration-[2000ms] cubic-bezier(0.23, 1, 0.32, 1) ${showLogo ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-95'}`}>
+        <div className={`flex flex-col items-center transition-all duration-[2500ms] ${isExpanding ? 'scale-150 blur-2xl opacity-0' : 'scale-100'}`}>
+          <div className="space-y-4 text-center">
+             <h1 className="text-6xl md:text-[12rem] font-bold text-white tracking-[0.4em] font-imax wsp-glow-text animate-flicker translate-x-[0.2em]">
+                WSP
+             </h1>
+             <div className="h-px w-32 md:w-64 bg-gradient-to-r from-transparent via-white/20 to-transparent mx-auto"></div>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* ACT 2: SENI (The Art / Ink Wash) */}
-      {act === 'SENI' && (
-        <div className={`absolute inset-0 transition-opacity duration-1000 bg-white ${isTransitioning ? 'opacity-0 scale-90' : 'opacity-100'}`}>
-          <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/rice-paper-2.png')]"></div>
-          
-          <div className="flex flex-col items-center justify-center h-full relative z-10 p-8">
-            <div className="max-w-4xl text-center space-y-12">
-               <div className="relative inline-block animate-ink-bleed">
-                  <h1 className="text-[15vmin] font-anime text-black leading-none drop-shadow-lg">
-                    Seni
-                  </h1>
-                  <div className="absolute -bottom-2 md:-bottom-4 left-0 w-full h-[1vmin] bg-black rounded-full blur-sm opacity-10"></div>
-               </div>
-               
-               <p className="text-lg md:text-3xl font-cinematic text-gray-800 tracking-[0.2em] md:tracking-[0.3em] uppercase animate-fade-in delay-500">
-                 The Flourish of Art
-               </p>
-               
-               <div className="flex justify-center gap-8 opacity-40">
-                  <div className="w-12 h-1 bg-black"></div>
-                  <Sparkles size={24} className="text-black" />
-                  <div className="w-12 h-1 bg-black"></div>
-               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ACT 3: PUJANGGA (The Sage / Cinema) */}
-      {act === 'PUJANGGA' && (
-        <div className={`absolute inset-0 transition-opacity duration-1000 bg-gray-950 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
-          <div className="grain-overlay animate-film-grain"></div>
-          
-          <div className="flex flex-col items-center justify-center h-full relative z-20">
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-80"></div>
-            
-            {/* Cinematic Lens Flare */}
-            <div className="absolute top-1/4 left-1/4 w-[120%] h-1 bg-blue-400/20 blur-2xl rotate-12"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-[120%] h-1 bg-blue-500/10 blur-3xl -rotate-6"></div>
-
-            <div className="text-center space-y-4 px-6">
-              <h2 className="text-base md:text-2xl font-cinematic text-blue-200/60 tracking-[0.5em] md:tracking-[1em] uppercase mb-4 md:mb-8">
-                Stage Three
-              </h2>
-              <h1 className="text-[13vmin] font-cinematic text-white tracking-[0.15em] leading-tight drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
-                PUJANGGA
-              </h1>
-              <div className="h-1 w-20 md:w-32 bg-white/20 mx-auto mt-8 md:mt-12 rounded-full overflow-hidden">
-                <div className="h-full bg-white/60 w-1/2 animate-infinite-scroll"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ACT 4: WSP (The Digital Resolution) */}
-      {act === 'WSP' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#e0e5ec]">
-          <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-transparent h-1/3 opacity-20"></div>
-          
-          {/* Water Background Effect (Resolving from Act 3) */}
-          <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/water.png')] animate-pulse"></div>
-
-          <div className="relative z-10 text-center scale-90 md:scale-110 animate-fade-in">
-             <div className="relative inline-block mb-8 md:mb-12">
-                <h1 className="text-[20vmin] font-black water-text font-imax tracking-tighter drop-shadow-[10px_10px_20px_rgba(163,177,198,0.6)] md:drop-shadow-[15px_15px_30px_rgba(163,177,198,0.6)]">
-                    WSP
-                </h1>
-                <div className="absolute inset-0 blur-2xl text-blue-500/10 -z-10 animate-pulse">WSP</div>
-             </div>
-             
-             <div className="flex flex-col items-center gap-4">
-                <div className="h-1 w-48 md:w-64 bg-neu-shadowDark/20 rounded-full shadow-neu-in overflow-hidden">
-                   <div className="h-full bg-neu-accent w-full animate-progress-fast"></div>
-                </div>
-                <p className="font-imax text-neu-accent tracking-[0.3em] md:tracking-[0.5em] text-xs md:text-sm font-bold uppercase">
-                  Initializing Stream
-                </p>
-             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Persistent Interaction Hint Hidden as per request */}
-      {/* {!isTransitioning && act !== 'WSP' && (
-        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/40 font-cinematic text-xs tracking-widest uppercase animate-bounce pointer-events-none">
-          <ArrowRight className="mb-1" />
-          Tap to progress
-        </div>
-      )} */}
+      {/* Expansion Overlay Effect into Dashboard */}
+      <div className={`absolute inset-0 z-50 transition-all duration-[1500ms] ease-in-out pointer-events-none ${isExpanding ? 'bg-black/40 backdrop-blur-3xl' : 'bg-transparent backdrop-blur-0'}`}></div>
     </div>
   );
 };

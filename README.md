@@ -7,14 +7,15 @@
 ## ✨ Key Features
 
 - **🎬 Vast Library**: Browse and stream a wide range of Movies and TV Shows powered by the TMDB API.
-- **⚡ Quick & Responsive**: Built with Vite and React for lightning-fast performance.
-- **🎨 Neumorphic Design**: A unique, soft UI design system that stands out from typical flat/material designs.
+- **🤖 Native Spatial xScribe AI**: Advanced agentic AI using 0.3s frame capture loops for real-time visual context and autonomous playback control.
+- **📊 Viewing Analytics**: Personal glassmorphic dashboard visualizing your watch history and media type saturation (Movies vs TV vs Anime).
+- **🎨 Hollow Knight Intro**: A cinematic, monochromatic intro experience with atmospheric lighting, God rays, and perfect logo centering.
 - **👶 Kids Mode**: A zero-tolerance safe environment for young viewers with Nickelodeon-style 90s visual aesthetics, strict content filters, and curated family playlists.
 - **🤝 Watch Party**: Watch together with friends in real-time! Sync playback and chat using PeerJS (P2P).
-- **💾 Parchment List (Watchlist)**: Efficient watchlist management with quick removal functionality and local persistence.
+- **💾 Local Persistence**: Robust state management for "Parchment List" (Watch Later) and History using local storage.
 - **💬 Automated Subtitles**: Real-time discovery and valid `.srt` downloads for movies and TV shows.
 - **🕹️ Refined Fun Mode**: Retro CRT visuals with a modern header-based navigation for decade selection.
-- **📱 Universal Mobile Optimization**: Seamless adaptive layouts for header, dashboard, and player across all device sizes (optimized for iPhone 14 Pro).
+- **📱 Universal Mobile Perfection**: Mathematically centered adaptive layouts optimized for premium handheld experiences (iPhone 14 Pro).
 - **🛡️ Secure Access**: Modern split-view login interface with PIN-pad access and encrypted session handling.
 
 ## 🎮 How to Use

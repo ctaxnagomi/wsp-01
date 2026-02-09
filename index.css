@@ -1,8 +1,43 @@
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Bubblegum+Sans&display=swap');
+/* IOS GLASSMORPHISM DESIGN SYSTEM */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-bg-dark: rgba(0, 0, 0, 0.3);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --ios-blue: #007AFF;
+  --ios-grey: #8E8E93;
+}
 
-/* FUN MODE BASE */
-.fun-mode-active {
-  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+.glass-base {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
+  backdrop-filter: blur(25px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+}
+
+.glass-dark {
+  background: var(--glass-bg-dark);
+  -webkit-backdrop-filter: blur(30px) saturate(150%);
+  backdrop-filter: blur(30px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-5px);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 /* 1970s: GRAINY & VINTAGE */
@@ -202,4 +237,142 @@
 
 .animate-wobbly {
     animation: wobbly 2s infinite ease-in-out;
+}
+
+/* SILKSONG CINEMATIC INTRO */
+.silksong-god-rays {
+    background: linear-gradient(115deg, transparent 40%, rgba(255, 120, 0, 0.05) 45%, rgba(255, 180, 0, 0.15) 50%, rgba(255, 120, 0, 0.05) 55%, transparent 60%);
+    background-size: 300% 100%;
+    animation: rays-flow 12s infinite linear;
+}
+
+@keyframes rays-flow {
+    0% { background-position: 200% 0; }
+    100% { background-position: -100% 0; }
+}
+
+.silksong-ember {
+    position: absolute;
+    background: radial-gradient(circle, rgba(255, 180, 50, 0.6) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: ember-float linear infinite;
+}
+
+@keyframes ember-float {
+    0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+    20% { opacity: 0.6; }
+    80% { opacity: 0.6; }
+    100% { transform: translateY(-100vh) translateX(50px) scale(0.3); opacity: 0; }
+}
+
+.intro-silhouette-mid {
+    background: #050505;
+    clip-path: polygon(0% 100%, 15% 75%, 30% 90%, 45% 65%, 60% 85%, 80% 60%, 100% 100%);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 35vh;
+    filter: blur(2px);
+    opacity: 0.8;
+}
+
+.intro-silhouette-near {
+    background: #000000;
+    clip-path: polygon(0% 100%, 10% 80%, 25% 95%, 40% 70%, 55% 90%, 75% 65%, 90% 85%, 100% 100%);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 25vh;
+    filter: blur(1px);
+}
+
+.intro-silhouette-far {
+    background: #0a0a0a;
+    clip-path: polygon(0% 100%, 15% 60%, 35% 85%, 50% 50%, 65% 80%, 85% 55%, 100% 100%);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50vh;
+    filter: blur(4px);
+    opacity: 0.7;
+}
+
+.wsp-glow-text {
+    text-shadow: 0 0 20px rgba(255, 150, 50, 0.3), 0 0 40px rgba(255, 100, 0, 0.1);
+}
+
+.animate-flicker {
+    animation: flicker 4s infinite secondary;
+}
+
+@keyframes flicker {
+    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+    20%, 22%, 24%, 55% { opacity: 0.8; }
+}
+
+
+/* INTRO SCREEN UI CLASSES */
+.intro-bg-silksong {
+    background-image: url('/assets/silksong_bg.png');
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.4) contrast(1.1) saturate(0.8);
+}
+
+.intro-logo-container {
+    width: 300px;
+    height: auto;
+    aspect-ratio: 1/1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (min-width: 768px) {
+    .intro-logo-container {
+        width: 600px;
+    }
+}
+
+.intro-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    mix-blend-mode: lighten;
+    filter: brightness(1.2) drop-shadow(0 0 30px rgba(255,200,100,0.2));
+}
+
+/* SILKSONG EMBERS */
+.silksong-ember {
+    position: absolute;
+    background: radial-gradient(circle, rgba(255,180,50,0.8) 0%, rgba(255,100,0,0.4) 60%, transparent 100%);
+    border-radius: 50%;
+    filter: blur(2px);
+    box-shadow: 0 0 10px rgba(255,150,0,0.5);
+    animation: ember-float linear infinite;
+    pointer-events: none;
+    z-index: 5;
+    left: var(--ember-left);
+    bottom: -20px;
+    width: var(--ember-size);
+    height: var(--ember-size);
+    animation-duration: var(--ember-duration);
+    animation-delay: var(--ember-delay);
+}
+
+@keyframes ember-float {
+    0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+    20% { opacity: 1; }
+    100% { transform: translateY(-100vh) translateX(50px) scale(0.5); opacity: 0; }
+}
+
+/* ANALYTICS PROGRESS BARS */
+.analytics-progress-chunk {
+    height: 100%;
+    transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+    width: var(--progress-width);
 }
