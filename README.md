@@ -17,9 +17,10 @@
 - **💾 Local Persistence**: Robust state management for "Parchment List" (Watch Later) and History using local storage.
 - **💬 Automated Subtitles**: Real-time discovery and valid `.srt` downloads for movies and TV shows.
 - **🕹️ Refined Fun Mode**: Retro CRT visuals with a modern header-based navigation for decade selection.
-- **📱 Universal Mobile Perfection**: Mathematically centered adaptive layouts optimized for premium handheld experiences (iPhone 14 Pro).
+- **📱 Universal Mobile Perfection**: Mathematically centered adaptive layouts optimized for premium handheld experiences (iPhone 14 Pro, iPad Mini).
 - **🎨 Premium Visuals**: Integrated Font Awesome 6.5.1 for standardized iconography and glassmorphic UI layering for superior contextual focus.
 - **🛡️ Secure Access**: Modern split-view login interface with PIN-pad access and encrypted session handling.
+- **🔒 Privacy First**: All data is stored locally. No cloud tracking.
 
 ## 🎮 How to Use
 

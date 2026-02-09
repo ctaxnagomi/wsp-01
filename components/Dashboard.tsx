@@ -136,8 +136,10 @@ const Section: React.FC<{
   onMarkWatched?: (m: Movie) => void,
   isWatched?: (id: number) => boolean,
   isInWatchLater?: (id: number) => boolean,
-  kidsMode?: boolean
-}> = ({ title, subtitle, icon, rightElement, movies, onPlay, onViewArchive, onRemove, onToggleWatchLater, onMarkWatched, isWatched, isInWatchLater, kidsMode }) => (
+
+  kidsMode?: boolean,
+  showRanking?: boolean
+}> = ({ title, subtitle, icon, rightElement, movies, onPlay, onViewArchive, onRemove, onToggleWatchLater, onMarkWatched, isWatched, isInWatchLater, kidsMode, showRanking }) => (
   <div className="space-y-4 md:space-y-6">
     <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 px-2">
         <div className="space-y-1">
@@ -159,23 +161,48 @@ const Section: React.FC<{
         </div>
     </div>
     
-    <div className={`flex overflow-x-auto gap-4 sm:gap-8 pb-6 sm:pb-10 px-4 sm:px-8 no-scrollbar snap-x snap-mandatory ${kidsMode ? 'px-8' : ''}`}>
-      {movies.map(movie => (
-        <div key={movie.id} className={`min-w-[140px] sm:min-w-[200px] md:min-w-[260px] snap-start group cursor-pointer transition-all relative ${kidsMode ? 'kids-card-hover' : ''}`}>
+    <div className={`flex overflow-x-auto gap-4 sm:gap-8 pt-10 pb-6 sm:pb-10 px-4 sm:px-8 no-scrollbar snap-x snap-mandatory ${kidsMode ? 'px-8' : ''}`}>
+      {movies.map((movie, index) => (
+        <div key={movie.id} className={`min-w-[140px] sm:min-w-[200px] md:min-w-[260px] snap-start group cursor-pointer transition-all duration-300 ease-out relative z-10 hover:z-50 scale-95 hover:scale-105 ${kidsMode ? 'kids-card-hover' : ''}`}>
            <div onClick={() => onPlay(movie)} className="relative rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden glass-card mb-3 sm:mb-6 aspect-[10/14] border-2 sm:border-4 border-transparent group-hover:border-white/30 transition-all shadow-2xl">
               <img src={movie.poster_path} alt={movie.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 sm:gap-4 backdrop-blur-sm">
-                 <div className="w-10 h-10 sm:w-16 sm:h-16 glass rounded-full flex items-center justify-center text-white scale-50 group-hover:scale-100 transition-transform shadow-neon">
-                    <PlayCircle size={24} className="sm:w-10 sm:h-10" fill="white" />
+              
+              {/* Hover Overlay: Synopsis */}
+              <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-end p-4 sm:p-6 backdrop-blur-md">
+                 <div className="flex-1 flex items-center justify-center">
+                    <div className="w-10 h-10 sm:w-16 sm:h-16 glass rounded-full flex items-center justify-center text-white scale-50 group-hover:scale-100 transition-transform shadow-neon mb-4">
+                        <PlayCircle size={24} className="sm:w-10 sm:h-10" fill="white" />
+                    </div>
                  </div>
-                 <span className="text-[8px] sm:text-[10px] font-black text-white uppercase tracking-[0.2em] sm:tracking-[0.4em] translate-y-4 group-hover:translate-y-0 transition-transform duration-500">View Now</span>
+                 
+                 <div className="w-full bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/10 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                    <p className="text-[10px] sm:text-xs text-white/90 line-clamp-3 leading-relaxed font-sans text-center">
+                        {movie.overview}
+                    </p>
+                 </div>
               </div>
               
-              <div className="absolute top-2 left-2 sm:top-4 sm:left-4">
-                 <div className="glass-dark px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[6px] sm:text-[8px] font-black text-white uppercase tracking-widest border border-white/10">
-                    {movie.rating} Rating
-                 </div>
+              {/* Ranking or Rating Badge */}
+              <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-20">
+                 {showRanking ? (
+                     <div className="glass-dark px-3 py-1 sm:px-4 sm:py-2 rounded-xl text-lg sm:text-2xl font-black text-yellow-400 font-cinematic border border-yellow-500/30 shadow-lg flex items-center gap-1">
+                        <span className="text-[10px] text-white/40 mb-auto pt-1">#</span>{index + 1}
+                     </div>
+                 ) : (
+                     <div className="glass-dark px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[6px] sm:text-[8px] font-black text-white uppercase tracking-widest border border-white/10">
+                        {movie.rating} Rating
+                     </div>
+                 )}
               </div>
+
+              {/* Rating moved to bottom left if Ranking is shown */}
+              {showRanking && (
+                  <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 z-20 opacity-100 group-hover:opacity-0 transition-opacity">
+                     <div className="glass-dark px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[6px] sm:text-[8px] font-black text-white uppercase tracking-widest border border-white/10">
+                        {movie.rating} Rating
+                     </div>
+                  </div>
+              )}
 
               {!onRemove && !kidsMode && (
                   <div className="absolute top-2 right-2 sm:top-4 sm:right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
@@ -853,8 +880,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
     <div className={`min-h-screen transition-all duration-700 ${kidsMode ? 'kids-mode-active' : (funMode ? `fun-mode-active crt-overlay retro-grid-bg ${getFunClass()}` : 'bg-[#0a0a0a]')}`}>
       <button title="Secret Anchor" className="opacity-0 absolute pointer-events-none">Hidden</button>
       {/* Navbar - iOS Glassy */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-3 md:px-8 py-3 md:py-5 flex items-center justify-between gap-2 md:gap-4 ${isScrolled ? 'glass-base border-b' : 'bg-transparent'}`}>
-        <div className="flex items-center gap-2 md:gap-10">
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-3 md:px-6 py-3 md:py-4 flex items-center justify-between gap-2 md:gap-4 ${isScrolled ? 'glass-base border-b' : 'bg-transparent'}`}>
+        <div className="flex items-center gap-2 md:gap-5">
             {!kidsMode && (
                 <h1 className="font-bold text-white tracking-[0.1em] md:tracking-[0.2em] text-sm sm:text-2xl cursor-pointer whitespace-nowrap font-imax flex items-center gap-2 -mr-[0.1em] md:-mr-[0.2em]">
                    {funMode && <Monitor size={18} className="text-retro-neon-blue animate-pulse"/>}
@@ -1033,7 +1060,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                                 ))}
                             </div>
 
-                            <p className="text-gray-600 text-sm sm:text-lg md:text-xl line-clamp-2 sm:line-clamp-3 leading-relaxed max-w-2xl font-medium">
+                            <p className="text-white/90 text-sm sm:text-lg md:text-xl line-clamp-2 sm:line-clamp-3 leading-relaxed max-w-2xl font-medium drop-shadow-md">
                                 {featuredContent.overview}
                             </p>
                             
@@ -1152,6 +1179,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                         isWatched={(id) => watchHistory.some(m => m.id === id)}
                         isInWatchLater={(id) => watchLater.some(m => m.id === id)}
                         kidsMode={kidsMode}
+                        showRanking={selectedCategory === 'Originals'}
                     />
                  )}
         
@@ -1866,12 +1894,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                   </div>
 
                   <div className="space-y-12 pb-20">
-                      <Section 
+                       <Section 
                         title="Top 20 Movies" 
                         subtitle="Cinematic Masterpieces"
                         movies={archiveData.movies}
                         onPlay={(m) => { setSelectedMovie(m as any); setShowArchive(false); }}
                         kidsMode={kidsMode}
+                        showRanking
                       />
                        <Section 
                         title="Top 20 Series" 
@@ -1879,6 +1908,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                         movies={archiveData.tv}
                         onPlay={(m) => { setSelectedMovie(m as any); setShowArchive(false); }}
                         kidsMode={kidsMode}
+                        showRanking
                       />
                        <Section 
                         title="Top Anime" 
@@ -1886,6 +1916,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                         movies={archiveData.anime}
                         onPlay={(m) => { setSelectedMovie(m as any); setShowArchive(false); }}
                         kidsMode={kidsMode}
+                        showRanking
                       />
                   </div>
               </div>

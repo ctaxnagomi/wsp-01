@@ -27,6 +27,24 @@ This update focuses on stabilizing the video engine, enhancing security against 
 - Fixed syntax errors and type mismatches in the main Dashboard component.
 - Removed redundant tutorial modal implementation to keep the UI lean and focused.
 - Ensured proper cleanup of terminal logs and temporary states during content switching.
+- Fixed layout overlap on iPad Mini and tablet devices.
+- Resolved console errors related to duplicate identifiers.
+
+### 📲 Mobile Experience Pro-Tip
+
+**Add to Home Screen**: For the best experience, open WSP Stream on your mobile browser (Safari/Chrome) and select **"Add to Home Screen"**.
+
+- This installs the app with the official WSP logo.
+- Removes browser address bars for a full-screen, immersive experience.
+- Improves performance and touch responsiveness.
+
+### 🔒 Privacy & Terms
+
+**Data Sovereignty**: WSP Stream operates on a **Local-First** architecture.
+
+- **Local Storage**: All your watch history, "Watch Later" lists, and preferences are stored exclusively in your browser's LocalStorage (`localStorage`).
+- **No Cloud Tracking**: We do not transmit your viewing habits, personal identifiers, or analytics to any external cloud servers.
+- **Data Deletion**: You can fully wipe your data at any time by clearing your browser's site data.
 
 ---
 
