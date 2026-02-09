@@ -2,8 +2,18 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, shrink-to-fit=no" />
     <title>Wayang Seni Pujangga</title>
+    <script>
+      // Filter out browser attestation noise from external iframes
+      const originalError = console.error;
+      console.error = (...args) => {
+        if (typeof args[0] === 'string' && (args[0].includes('Attestation check') || args[0].includes('vidnest.fun'))) {
+          return;
+        }
+        originalError.apply(console, args);
+      };
+    </script>
     <link rel="icon" type="image/png" href="/assets/logo-favi.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -104,6 +114,7 @@
         color: #4d4d4d;
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         overscroll-behavior: none;
+        overflow-x: hidden;
       }
       .no-scrollbar::-webkit-scrollbar {
         display: none;

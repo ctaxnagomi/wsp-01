@@ -7,6 +7,14 @@
   --ios-grey: #8E8E93;
 }
 
+html, body, #root {
+  min-height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overscroll-behavior: none;
+}
+
 .glass-base {
   background: var(--glass-bg);
   -webkit-backdrop-filter: blur(25px) saturate(180%);
@@ -27,13 +35,14 @@
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-card:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-5px);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-8px) scale(1.02);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -371,8 +380,38 @@
 }
 
 /* ANALYTICS PROGRESS BARS */
-.analytics-progress-chunk {
-    height: 100%;
-    transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
-    width: var(--progress-width);
+/* SMOOTH ANIMATIONS */
+@keyframes slide-up-subtle {
+    from { transform: translateY(20px); opacity: 0; filter: blur(10px); }
+    to { transform: translateY(0); opacity: 1; filter: blur(0); }
+}
+
+.animate-slide-up {
+    animation: slide-up-subtle 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fade-in-blur {
+    from { opacity: 0; filter: blur(5px); }
+    to { opacity: 1; filter: blur(0); }
+}
+
+.animate-fade-in-blur {
+    animation: fade-in-blur 0.4s ease-out forwards;
+}
+
+.hover-scale-premium {
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hover-scale-premium:hover {
+    transform: scale(1.05);
+    filter: brightness(1.2);
+}
+
+.hover-scale-premium:active {
+    transform: scale(0.95);
+}
+
+.scroll-smooth {
+    scroll-behavior: smooth;
 }

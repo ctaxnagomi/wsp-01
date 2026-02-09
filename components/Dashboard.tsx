@@ -1,24 +1,24 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { NeuCard, NeuInput, NeuIconButton, NeuButton } from './NeumorphicUI';
 import { 
   Play, Info, Search, Plus, Star, LogOut, ChevronDown, 
-  X as CloseIcon, ChevronLeft, ChevronRight, Download, Copy, 
+  X, ChevronLeft, ChevronRight, Download, Copy, 
   Facebook, Instagram, Twitter, MessageCircle, 
   Maximize, Minimize, SkipForward, Pause, Captions, FileText, Send, Share2,
   AlertCircle, RefreshCw, Tv, Film, Layers, Monitor, Users, Link as LinkIcon, Check,
-  TrendingUp, Clock, Bookmark, PlayCircle, Eye, ScrollText, Loader2, ArrowRight, Sparkles, X,
+  TrendingUp, Clock, Bookmark, PlayCircle, Eye, ScrollText, Loader2, ArrowRight, Sparkles,
   History
 } from 'lucide-react';
 import { AnalyticsSection } from './AnalyticsSection';
 import { Footer } from './Footer';
 import { Movie, UserProfile } from '../types';
 import { generateChatResponse, generateSpatialDiscovery } from '../services/geminiService';
-import { fetchTrending, searchMulti, fetchByDecade, fetchByGenre, fetchAnime, fetchByCompany, fetchByQuery } from '../services/tmdb';
+import { fetchTrending, searchMulti, fetchByDecade, fetchByGenre, fetchAnime, fetchByCompany, fetchByQuery, fetchDetails, fetchSeasonDetails } from '../services/tmdb';
 import { watchPartyService, PartyUpdate } from '../services/watchPartyService';
 
 const VIDSRC_URL = import.meta.env.VITE_VIDSRC_URL || 'https://vidnest.fun';
+const VIDFAST_URL = 'https://vidfast.pro';
 
 // Content data
 const MOCK_CONTENT: (Movie & { video_id: string })[] = [
@@ -398,8 +398,31 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
   const [sxeInput, setSxeInput] = useState('S1E1');
-  const [videoSource, setVideoSource] = useState<'vidsrc' | 'vidfastpro'>('vidsrc');
+  const [videoSource, setVideoSource] = useState<'pluto' | 'uranus'>('uranus');
   const [activeSubtitle, setActiveSubtitle] = useState<string | null>(null);
+  const [totalSeasonsCount, setTotalSeasonsCount] = useState<number>(1);
+  const [episodesInCurrentSeason, setEpisodesInCurrentSeason] = useState<number>(0);
+  const [adClicksCount, setAdClicksCount] = useState(0);
+
+  // Redirect Guard & Focus Handling
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // If we are in the middle of a watchparty or playing video, warn the user
+      // External redirects from iframes often try to navigate the top window
+      if (document.activeElement?.tagName === 'IFRAME') {
+         e.preventDefault();
+         return (e.returnValue = "Are you sure you want to leave? An external site is trying to redirect you.");
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
+  // Handle content changes - Reset Ad Clicks
+  useEffect(() => {
+    setAdClicksCount(0);
+  }, [selectedMovie, selectedSeason, selectedEpisode]);
 
   const getSubtitles = (movie: Movie) => {
     return [
@@ -558,7 +581,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
         setIsFullscreen(false);
         setSelectedSeason(1);
         setSelectedEpisode(1);
-        setVideoSource('vidsrc');
+        setVideoSource('uranus');
     }
   }, [selectedMovie]);
 
@@ -616,6 +639,31 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
+
+  // Fetch TV Details and Season Info
+  useEffect(() => {
+    const fetchTVDetails = async () => {
+      if (selectedMovie && selectedMovie.media_type === 'tv') {
+        const details = await fetchDetails(selectedMovie.id, 'tv');
+        if (details) {
+          setTotalSeasonsCount(details.number_of_seasons || 1);
+        }
+      }
+    };
+    fetchTVDetails();
+  }, [selectedMovie]);
+
+  useEffect(() => {
+    const fetchSeasonInfo = async () => {
+      if (selectedMovie && selectedMovie.media_type === 'tv') {
+        const seasonInfo = await fetchSeasonDetails(selectedMovie.id, selectedSeason);
+        if (seasonInfo && seasonInfo.episodes) {
+          setEpisodesInCurrentSeason(seasonInfo.episodes.length);
+        }
+      }
+    };
+    fetchSeasonInfo();
+  }, [selectedMovie, selectedSeason]);
 
   // Featuring Carousel Auto-play
   useEffect(() => {
@@ -894,6 +942,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
             <Search className={`absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 ${kidsMode ? 'text-kids-orange' : 'text-white/40'}`} size={16} />
             <input 
                 type="text"
+                title="Search movies and TV shows"
                 placeholder={kidsMode ? "Find Your Favorite Cartoons!" : "Search..."}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -1353,18 +1402,29 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                         <iframe 
                             className="w-full h-full rounded-sm" 
                             src={
-                                videoSource === 'vidsrc' 
-                                ? (selectedMovie.media_type === 'movie' 
-                                    ? `${VIDSRC_URL}/movie/${selectedMovie.id}?iframe=true&controls=0&showinfo=0&modestbranding=1&autoplay=1`
-                                    : `${VIDSRC_URL}/tv/${selectedMovie.id}/${selectedSeason}/${selectedEpisode}?iframe=true&controls=0&showinfo=0&modestbranding=1&autoplay=1`)
-                                : (selectedMovie.media_type === 'movie'
-                                    ? `https://vidfast.pro/movie/${selectedMovie.id}?autoPlay=true&theme=F59E0B`
-                                    : `https://vidfast.pro/tv/${selectedMovie.id}/${selectedSeason}/${selectedEpisode}?autoPlay=true&theme=F59E0B&autoNext=true&nextButton=true`)
+                                 videoSource === 'pluto' 
+                                 ? (selectedMovie.media_type === 'movie' 
+                                     ? `${VIDSRC_URL}/movie/${selectedMovie.id}?iframe=true&controls=0&showinfo=0&modestbranding=1&autoplay=1`
+                                     : `${VIDSRC_URL}/tv/${selectedMovie.id}/${selectedSeason}/${selectedEpisode}?iframe=true&controls=0&showinfo=0&modestbranding=1&autoplay=1`)
+                                 : (selectedMovie.media_type === 'movie'
+                                     ? `${VIDFAST_URL}/movie/${selectedMovie.id}?autoPlay=true&theme=F59E0B`
+                                     : `${VIDFAST_URL}/tv/${selectedMovie.id}/${selectedSeason}/${selectedEpisode}?autoPlay=true&theme=F59E0B&autoNext=true&nextButton=true`)
                             }
                             allow="autoplay; encrypted-media" 
                             allowFullScreen
                             title={`${selectedMovie.title} Player`}
                         ></iframe>
+
+                        {/* Click-Guard Overlay: Intercepts the first few ad-trigger clicks */}
+                        {adClicksCount < 2 && (
+                            <div 
+                                className="absolute inset-0 z-30 cursor-pointer bg-transparent"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setAdClicksCount(prev => prev + 1);
+                                }}
+                            />
+                        )}
 
                         {selectedMovie.media_type === 'tv' && (
                             <div className="absolute top-10 left-10 glass-dark text-white px-6 py-2 rounded-full text-xs font-black tracking-widest uppercase z-20">
@@ -1390,7 +1450,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                 {/* RIGHT PANEL: Party & Stats */}
                 <div className={`absolute right-0 top-0 bottom-0 z-[60] glass-base border-l border-white/10 transition-all duration-500 flex flex-col ${rightTabOpen ? 'w-[22rem] translate-x-0' : 'w-[22rem] translate-x-full'}`}>
                     {isWatchParty ? (
-                        <div className="flex flex-col h-full">
+                        <div className="flex flex-col h-full animate-slide-up">
                              <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
                                 <h3 className="font-bold text-white flex items-center gap-2 uppercase tracking-widest text-sm">
                                     <Users size={18} className="text-white"/> Public Square
@@ -1465,12 +1525,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                              </div>
                         </div>
                     ) : (
-                        <div className="flex flex-col h-full">
+                        <div className="flex flex-col h-full animate-slide-up">
                             <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
                                 <h3 className="font-bold text-white flex items-center gap-2 uppercase tracking-widest text-sm">
                                     <Layers size={18} className="text-white"/> Artifact Info
                                 </h3>
-                                <button title="Close Details" onClick={() => setRightTabOpen(false)} className="w-8 h-8 rounded-full glass-dark flex items-center justify-center text-white/40 hover:text-white transition-all border border-white/10"><X size={14}/></button>
+                                <button title="Close Details" onClick={() => setRightTabOpen(false)} className="w-8 h-8 rounded-full glass-dark flex items-center justify-center text-white/40 hover:text-white transition-all border border-white/10 hover-scale-premium"><X size={14}/></button>
                             </div>
                             <div className="flex-1 p-6 space-y-8 overflow-y-auto no-scrollbar">
                                 {/* JOIN PARTY PORTAL */}
@@ -1487,7 +1547,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                                          <button 
                                              onClick={handleJoinParty} 
                                              title="Join Party"
-                                             className="w-12 h-12 rounded-xl glass-dark border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all disabled:opacity-50"
+                                             className="w-12 h-12 rounded-xl glass-dark border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all disabled:opacity-50 hover-scale-premium"
                                              disabled={isJoining}
                                          >
                                              {isJoining ? <Loader2 size={16} className="animate-spin"/> : <ArrowRight size={16}/>}
@@ -1506,38 +1566,132 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                                 </div>
 
                                  {selectedMovie.media_type === 'tv' && (
-                                    <div className="p-6 glass-dark rounded-[2rem] border border-white/10 space-y-6">
+                                    <div className="p-4 sm:p-6 glass-dark rounded-[2rem] border border-white/10 space-y-8">
+                                        {/* Season Selector */}
                                         <div className="space-y-4">
-                                            <h4 className="text-[10px] font-bold text-white/30 uppercase tracking-widest text-center">Season</h4>
-                                            <div className="flex gap-4 overflow-x-auto no-scrollbar py-4 px-2 -mx-2">
-                                                {Array.from({length: selectedMovie.total_seasons || 1}, (_, i) => i + 1).map(s => (
-                                                    <button 
-                                                        key={s} 
-                                                        onClick={() => setSelectedSeason(s)} 
-                                                        className={`min-w-[48px] h-12 rounded-2xl flex items-center justify-center text-xs font-black transition-all flex-shrink-0 ${selectedSeason === s ? 'bg-white text-black shadow-2xl scale-110' : 'glass-dark border border-white/10 text-white/40 hover:text-white'}`}
-                                                    >
-                                                        {s}
-                                                    </button>
-                                                ))}
+                                            <h4 className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] text-center">Season</h4>
+                                            <div className="flex items-center justify-between gap-4 px-2">
+                                                <button 
+                                                    title="Previous Season"
+                                                    onClick={() => { setSelectedSeason(prev => Math.max(1, prev - 1)); setSelectedEpisode(1); }}
+                                                    className={`w-10 h-10 rounded-full glass-dark border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all ${selectedSeason === 1 ? 'opacity-0 pointer-events-none' : ''}`}
+                                                >
+                                                    <ChevronLeft size={18} />
+                                                </button>
+                                                
+                                                <div 
+                                                    key={`${selectedSeason}-${episodesInCurrentSeason}`}
+                                                    className="flex-1 overflow-x-auto no-scrollbar flex justify-start items-center gap-3 py-2 scroll-smooth px-4 animate-fade-in-blur overscroll-contain"
+                                                >
+                                                    {Array.from({length: totalSeasonsCount}, (_, i) => i + 1).map(s => (
+                                                        <button 
+                                                            key={s} 
+                                                            onClick={() => { setSelectedSeason(s); setSelectedEpisode(1); }} 
+                                                            className={`min-w-[56px] h-14 rounded-2xl flex items-center justify-center text-lg font-black transition-all flex-shrink-0 hover-scale-premium ${selectedSeason === s ? 'bg-white text-black shadow-neon scale-110' : 'glass-dark border border-white/10 text-white/30 hover:text-white'}`}
+                                                        >
+                                                            {s}
+                                                        </button>
+                                                    ))}
+                                                </div>
+
+                                                <button 
+                                                    title="Next Season"
+                                                    onClick={() => { setSelectedSeason(prev => Math.min(totalSeasonsCount, prev + 1)); setSelectedEpisode(1); }}
+                                                    className={`w-10 h-10 rounded-full glass-dark border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all ${selectedSeason === totalSeasonsCount ? 'opacity-0 pointer-events-none' : ''}`}
+                                                >
+                                                    <ChevronRight size={18} />
+                                                </button>
                                             </div>
                                         </div>
+
+                                        {/* Episode Selector */}
                                         <div className="space-y-4">
-                                            <h4 className="text-[10px] font-bold text-white/30 uppercase tracking-widest text-center">Episode / Jump</h4>
-                                            <div className="relative group">
-                                                <input 
-                                                    value={sxeInput} 
-                                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSxEChange(e.target.value)} 
-                                                    className="w-full bg-white/5 border border-white/10 rounded-3xl py-4 text-lg text-center text-white font-black tracking-widest uppercase outline-none focus:border-white/30 transition-all"
-                                                    placeholder="S1E1"
-                                                />
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-white/20 uppercase tracking-tighter pointer-events-none">
-                                                    S<i>x</i>E<i>yy</i>
+                                            <h4 className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] text-center">Episode</h4>
+                                            <div className="flex items-center justify-between gap-4 px-2">
+                                                <button 
+                                                    title="Previous Episode"
+                                                    onClick={() => {
+                                                        if (selectedEpisode > 1) setSelectedEpisode(prev => prev - 1);
+                                                        else if (selectedSeason > 1) {
+                                                            setSelectedSeason(prev => prev - 1);
+                                                            // Note: We don't know prev season episode count yet, so we just go to a high number and let the UI adjust?
+                                                            // Better: stay on 1 or handle logic elsewhere.
+                                                            setSelectedEpisode(1);
+                                                        }
+                                                    }}
+                                                    className={`w-10 h-10 rounded-full glass-dark border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all hover-scale-premium ${selectedSeason === 1 && selectedEpisode === 1 ? 'opacity-0 pointer-events-none' : ''}`}
+                                                >
+                                                    <ChevronLeft size={18} />
+                                                </button>
+
+                                                <div 
+                                                    key={`${selectedSeason}-${episodesInCurrentSeason}`}
+                                                    className="flex-1 overflow-x-auto no-scrollbar flex justify-start items-center gap-3 py-2 scroll-smooth px-4 animate-fade-in-blur overscroll-contain"
+                                                >
+                                                    {Array.from({length: episodesInCurrentSeason || 1}, (_, i) => i + 1).map(e => (
+                                                        <button 
+                                                            key={e} 
+                                                            onClick={() => setSelectedEpisode(e)} 
+                                                            className={`min-w-[56px] h-14 rounded-2xl flex items-center justify-center text-lg font-black transition-all flex-shrink-0 hover-scale-premium ${selectedEpisode === e ? 'bg-neu-accent text-white shadow-neon scale-110' : 'glass-dark border border-white/10 text-white/30 hover:text-white'}`}
+                                                        >
+                                                            {e}
+                                                        </button>
+                                                    ))}
                                                 </div>
+
+                                                <button 
+                                                    title="Next Episode"
+                                                    onClick={() => {
+                                                        if (selectedEpisode < episodesInCurrentSeason) setSelectedEpisode(prev => prev + 1);
+                                                        else if (selectedSeason < totalSeasonsCount) {
+                                                            setSelectedSeason(prev => prev + 1);
+                                                            setSelectedEpisode(1);
+                                                        }
+                                                    }}
+                                                    className={`w-10 h-10 rounded-full glass-dark border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all hover-scale-premium ${selectedSeason === totalSeasonsCount && selectedEpisode === episodesInCurrentSeason ? 'opacity-0 pointer-events-none' : ''}`}
+                                                >
+                                                    <ChevronRight size={18} />
+                                                </button>
                                             </div>
-                                            <div className="flex justify-between items-center px-2">
-                                                <button title="Previous Episode" onClick={() => setSelectedEpisode(Math.max(1, selectedEpisode - 1))} className="text-[10px] font-bold text-white/30 hover:text-white uppercase">Prev</button>
-                                                <div className="text-[10px] font-black text-white">S{selectedSeason} : E{selectedEpisode}</div>
-                                                <button title="Next Episode" onClick={() => setSelectedEpisode(selectedEpisode + 1)} className="text-[10px] font-bold text-white/30 hover:text-white uppercase">Next</button>
+                                        </div>
+
+                                        <div className="pt-4 border-t border-white/5 flex flex-col items-center gap-2">
+                                            <div className="relative w-full max-w-[200px]">
+                                                <input 
+                                                    value={`S${selectedSeason} E${selectedEpisode}`}
+                                                    readOnly
+                                                    title="Selected Season and Episode"
+                                                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-center text-white font-black tracking-widest uppercase text-xs"
+                                                />
+                                            </div>
+                                            <div className="flex justify-between w-full px-4">
+                                                <button 
+                                                    onClick={() => {
+                                                        if (selectedEpisode > 1) setSelectedEpisode(prev => prev - 1);
+                                                        else if (selectedSeason > 1) {
+                                                            setSelectedSeason(prev => prev - 1);
+                                                            setSelectedEpisode(1);
+                                                        }
+                                                    }}
+                                                    disabled={selectedSeason === 1 && selectedEpisode === 1}
+                                                    className="text-[8px] font-black text-white/20 hover:text-white uppercase tracking-widest disabled:opacity-0 transition-all hover-scale-premium"
+                                                >
+                                                    PREV
+                                                </button>
+                                                <span className="text-[10px] font-black text-neu-accent tracking-[0.3em]">S{selectedSeason} : E{selectedEpisode}</span>
+                                                <button 
+                                                    onClick={() => {
+                                                        if (selectedEpisode < episodesInCurrentSeason) setSelectedEpisode(prev => prev + 1);
+                                                        else if (selectedSeason < totalSeasonsCount) {
+                                                            setSelectedSeason(prev => prev + 1);
+                                                            setSelectedEpisode(1);
+                                                        }
+                                                    }}
+                                                    disabled={selectedSeason === totalSeasonsCount && selectedEpisode === episodesInCurrentSeason}
+                                                    className="text-[8px] font-black text-white/20 hover:text-white uppercase tracking-widest disabled:opacity-0 transition-all hover-scale-premium"
+                                                >
+                                                    NEXT
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -1635,17 +1789,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
 
                  <div className="flex items-center gap-4 ml-auto">
                      <button 
-                        onClick={() => setVideoSource(prev => prev === 'vidsrc' ? 'vidfastpro' : 'vidsrc')}
-                        className="px-6 h-12 rounded-xl glass-dark border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white hover:bg-white/10 transition-all flex items-center gap-3 group"
+                        onClick={() => setVideoSource((prev: 'pluto' | 'uranus') => prev === 'pluto' ? 'uranus' : 'pluto')}
+                        className="px-6 h-12 rounded-xl glass-dark border border-white/10 text-[10px] font-bold uppercase tracking-widest text-white hover:bg-white/10 transition-all flex items-center gap-3 group hover-scale-premium"
                         title="Switch Video Server"
                      >
-                        <RefreshCw size={14} className={`transition-all duration-500 ${videoSource === 'vidfastpro' ? 'animate-spin' : 'group-hover:rotate-180'}`} />
-                        <span className="hidden sm:inline">{videoSource === 'vidsrc' ? 'Server: Pluto' : 'Server: Uranus'}</span>
+                        <RefreshCw size={14} className={`transition-all duration-500 ${videoSource === 'uranus' ? 'animate-spin' : 'group-hover:rotate-180'}`} />
+                        <span className="hidden sm:inline">{videoSource === 'pluto' ? 'Server: Pluto' : 'Server: Uranus'}</span>
                      </button>
 
                      <button 
                         onClick={toggleWatchParty} 
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${isWatchParty ? 'bg-white text-black shadow-2xl scale-110' : 'glass-dark border border-white/10 text-white hover:bg-white/10'}`}
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all hover-scale-premium ${isWatchParty ? 'bg-white text-black shadow-2xl scale-110' : 'glass-dark border border-white/10 text-white hover:bg-white/10'}`}
                         title="Watchparty"
                      >
                         <Users size={20} />

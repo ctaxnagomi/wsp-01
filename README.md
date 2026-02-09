@@ -1,6 +1,8 @@
-# WSP Stream
+# WSP Stream (v1.1.0)
 
 **WSP Stream** is a modern, immersive web-based streaming platform designed for a premium user experience. It combines a sleek neumorphic interface with powerful features like real-time watch parties, AI-powered scene analysis, and a nostalgic "Fun Mode".
+
+[View Patch Notes (v1.1.0)](./PATCHNOTES.md)
 
 ![WSP Stream](https://placehold.co/800x450/1a1a1a/4d4d4d?text=WSP+Stream+Premium+Experience)
 

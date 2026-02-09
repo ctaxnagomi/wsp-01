@@ -140,3 +140,18 @@ export const fetchByQuery = async (query: string): Promise<Movie[]> => {
     return [];
   }
 };
+export const fetchSeasonDetails = async (
+  seriesId: number,
+  seasonNumber: number,
+): Promise<any> => {
+  try {
+    const response = await fetch(
+      `${BASE_URL}/tv/${seriesId}/season/${seasonNumber}?api_key=${API_KEY}`,
+    );
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(`Error fetching season ${seasonNumber} details for series ${seriesId}:`, error);
+    return null;
+  }
+};
