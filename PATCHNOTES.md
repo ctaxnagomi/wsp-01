@@ -21,6 +21,7 @@ This update focuses on stabilizing the video engine, enhancing security against 
 
 - **Scrolling Refinement**: Fixed issues where the page would become stuck or unscrollable on mobile devices.
 - **Console Cleaning**: Filtered out noisy "Attestation check" and "vidnest.fun" errors from the browser console for a cleaner developer experience.
+- **Ranking Badges**: Redesigned the ranking number to be ultra-compact and positioned at the top-left for a cleaner look.
 
 ## 🛠️ Bug Fixes
 
@@ -29,6 +30,7 @@ This update focuses on stabilizing the video engine, enhancing security against 
 - Ensured proper cleanup of terminal logs and temporary states during content switching.
 - Fixed layout overlap on iPad Mini and tablet devices.
 - Resolved console errors related to duplicate identifiers.
+- **Fullscreen Performance**: Targeted the video iframe directly to eliminate rendering lag during fullscreen toggles.
 
 ### 📲 Mobile Experience Pro-Tip
 

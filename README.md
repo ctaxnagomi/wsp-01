@@ -20,6 +20,7 @@
 - **📱 Universal Mobile Perfection**: Mathematically centered adaptive layouts optimized for premium handheld experiences (iPhone 14 Pro, iPad Mini).
 - **🎨 Premium Visuals**: Integrated Font Awesome 6.5.1 for standardized iconography and glassmorphic UI layering for superior contextual focus.
 - **🛡️ Secure Access**: Modern split-view login interface with PIN-pad access and encrypted session handling.
+- **⚡ Optimized Playback**: Direct iframe targeting for lag-free fullscreen transitions and smooth video performance.
 - **🔒 Privacy First**: All data is stored locally. No cloud tracking.
 
 ## 🎮 How to Use

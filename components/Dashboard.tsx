@@ -183,10 +183,10 @@ const Section: React.FC<{
               </div>
               
               {/* Ranking or Rating Badge */}
-              <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-20">
+              <div className="absolute top-1 left-1 z-20">
                  {showRanking ? (
-                     <div className="glass-dark px-3 py-1 sm:px-4 sm:py-2 rounded-xl text-lg sm:text-2xl font-black text-yellow-400 font-cinematic border border-yellow-500/30 shadow-lg flex items-center gap-1">
-                        <span className="text-[10px] text-white/40 mb-auto pt-1">#</span>{index + 1}
+                     <div className="glass-dark px-1.5 py-0.5 rounded-md text-[10px] font-black text-yellow-400 font-cinematic border border-yellow-500/30 shadow-lg flex items-center justify-center min-w-[20px]">
+                        <span className="text-[6px] text-white/40 mr-0.5 mt-[1px]">#</span>{index + 1}
                      </div>
                  ) : (
                      <div className="glass-dark px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[6px] sm:text-[8px] font-black text-white uppercase tracking-widest border border-white/10">
@@ -324,7 +324,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   const [isJoining, setIsJoining] = useState(false);
   const [joinInput, setJoinInput] = useState('');
   const playerContainerRef = useRef<HTMLDivElement>(null);
-  const [partyChatEndRef] = useState(useRef<HTMLDivElement>(null)); // Ref pattern adjustment if needed, but keeping original ref logic is better
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const partyChatEndRef = useRef<HTMLDivElement>(null);
   const partyChatEndRefOriginal = useRef<HTMLDivElement>(null);
 
   // Category & Quick Action State
@@ -745,11 +746,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   }
 
   const toggleFullscreen = async () => {
-    if (!playerContainerRef.current) return;
+    // Prefer targeting the iframe for better performance (less layout thrashing/lag)
+    const target = iframeRef.current || playerContainerRef.current;
+    if (!target) return;
+
     if (!document.fullscreenElement) {
         try {
-            await playerContainerRef.current.requestFullscreen();
-        } catch (err) { console.error(err); }
+            await target.requestFullscreen();
+        } catch (err) { console.error("Fullscreen Error:", err); }
     } else {
         document.exitFullscreen();
     }
@@ -1440,6 +1444,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                             }
                             allow="autoplay; encrypted-media" 
                             allowFullScreen
+                            ref={iframeRef}
                             title={`${selectedMovie.title} Player`}
                         ></iframe>
 
