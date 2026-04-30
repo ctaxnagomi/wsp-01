@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import html2canvas from 'html2canvas';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { NeuCard, NeuInput, NeuIconButton, NeuButton } from './NeumorphicUI';
 import { 
   Play, Info, Search, Plus, Star, LogOut, ChevronDown, 
@@ -8,7 +7,7 @@ import {
   Maximize, Minimize, SkipForward, Pause, Captions, FileText, Send, Share2,
   AlertCircle, RefreshCw, Tv, Film, Layers, Monitor, Users, Link as LinkIcon, Check,
   TrendingUp, Clock, Bookmark, PlayCircle, Eye, ScrollText, Loader2, ArrowRight, Sparkles,
-  History
+  History, Home, Baby, Layout
 } from 'lucide-react';
 import { AnalyticsSection } from './AnalyticsSection';
 import { Footer } from './Footer';
@@ -16,112 +15,25 @@ import { Movie, UserProfile } from '../types';
 import { generateChatResponse, generateSpatialDiscovery } from '../services/geminiService';
 import { fetchTrending, searchMulti, fetchByDecade, fetchByGenre, fetchAnime, fetchByCompany, fetchByQuery, fetchDetails, fetchSeasonDetails } from '../services/tmdb';
 import { watchPartyService, PartyUpdate } from '../services/watchPartyService';
+import { findByTmdbId, CONTENT_CATALOG } from '../services/contentSchema';
 
 const VIDSRC_URL = import.meta.env.VITE_VIDSRC_URL || 'https://vidnest.fun';
 const VIDFAST_URL = 'https://vidfast.pro';
 
-// Content data
-const MOCK_CONTENT: (Movie & { video_id: string })[] = [
-  { 
-    id: 1, 
-    title: 'The Shawshank Redemption', 
-    rating: 9.3, 
-    release_date: '1994', 
-    media_type: 'movie',
-    poster_path: 'https://image.tmdb.org/t/p/w500/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg', 
-    backdrop_path: 'https://image.tmdb.org/t/p/original/kXfqcd0tIuTlnEhdB9asBuhg9z.jpg', 
-    overview: 'Framed in the 1940s for the double murder of his wife and her lover, upstanding banker Andy Dufresne begins a new life at the Shawshank prison, where he puts his accounting skills to work for an amoral warden.', 
-    genre: ['Drama', 'Crime'],
-    video_id: 'NmzuHjWmXOc'
-  },
-  { 
-    id: 2, 
-    title: 'The Godfather', 
-    rating: 9.2, 
-    release_date: '1972', 
-    media_type: 'movie',
-    poster_path: 'https://image.tmdb.org/t/p/w500/3bhkrj58Vtu7enYsRolD1fZdja1.jpg', 
-    backdrop_path: 'https://image.tmdb.org/t/p/original/rSPw7tgCH9c6NqICZef4kZjFOQ5.jpg', 
-    overview: 'Spanning the years 1945 to 1955, a chronicle of the fictional Italian-American Corleone crime family. When organized crime family patriarch, Vito Corleone barely survives an attempt on his life, his youngest son, Michael steps in to take care of the would-be killers, launching a campaign of bloody revenge.', 
-    genre: ['Drama', 'Crime'],
-    video_id: 'UaVTIH8mujA'
-  },
-  { 
-    id: 3, 
-    title: 'The Dark Knight', 
-    rating: 9.0, 
-    release_date: '2008', 
-    media_type: 'movie',
-    poster_path: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg', 
-    backdrop_path: 'https://image.tmdb.org/t/p/original/nMKdUUepR0i5cvHjgNP48uPHKjd.jpg', 
-    overview: 'Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets. The partnership proves to be effective, but they soon find themselves prey to a reign of chaos unleashed by a rising criminal mastermind known to the terrified citizens of Gotham as the Joker.', 
-    genre: ['Action', 'Crime', 'Drama'],
-    video_id: 'EXeTwQWrcwY'
-  },
-  { 
-    id: 4, 
-    title: 'Breaking Bad', 
-    rating: 9.5, 
-    release_date: '2008', 
-    media_type: 'tv',
-    total_seasons: 5,
-    poster_path: 'https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pBasCherfkaSL.jpg', 
-    backdrop_path: 'https://image.tmdb.org/t/p/original/tsuQN755ODlI0wQkfKqjVR15Ed6.jpg', 
-    overview: 'When Walter White, a New Mexico chemistry teacher, is diagnosed with Stage III cancer and given a prognosis of only two years left to live. He becomes filled with a sense of fearlessness and an unrelenting desire to secure his family\'s financial future at any cost as he enters the dangerous world of drugs and crime.', 
-    genre: ['Drama', 'Crime'],
-    video_id: 'HhesaQXLuRY'
-  },
-  { 
-    id: 5, 
-    title: 'Game of Thrones', 
-    rating: 9.3, 
-    release_date: '2011', 
-    media_type: 'tv',
-    total_seasons: 8,
-    poster_path: 'https://image.tmdb.org/t/p/w500/1XS1qyL1tl6eVxi9yJ26EwM9v98.jpg', 
-    backdrop_path: 'https://image.tmdb.org/t/p/original/2OMB0yn59o8bJOnJnBOpxL2vnFc.jpg', 
-    overview: 'Seven noble families fight for control of the mythical land of Westeros. Friction between the houses leads to full-scale war. All while a very ancient evil awakens in the farthest north. Amidst the war, a neglected military order of misfits, the Night\'s Watch, is all that stands between the realms of men and icy horrors beyond.', 
-    genre: ['Sci-Fi', 'Drama', 'Action'],
-    video_id: 'KPLWWIOCOOQ'
-  },
-  { 
-    id: 6, 
-    title: 'Pulp Fiction', 
-    rating: 8.9, 
-    release_date: '1994', 
-    media_type: 'movie',
-    poster_path: 'https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg', 
-    backdrop_path: 'https://image.tmdb.org/t/p/original/suaEOtk1916guXlVTckV52XZK04.jpg', 
-    overview: 'A burger-loving hit man, his philosophical partner, a drug-addled gangster\'s moll and a washed-up boxer converge in this sprawling, comedic crime caper. Their adventures unfurl in three stories that ingeniously trip back and forth in time.', 
-    genre: ['Thriller', 'Crime'],
-    video_id: 's7EdQ4FqbhY'
-  },
-  {
-    id: 7,
-    title: 'Chernobyl',
-    rating: 9.4,
-    release_date: '2019',
-    media_type: 'tv',
-    total_seasons: 1,
-    poster_path: 'https://image.tmdb.org/t/p/w500/hlLXt2tOPT6iUdi33qG9RCftAJ.jpg',
-    backdrop_path: 'https://image.tmdb.org/t/p/original/uDgy6hyPd82kOHh6I95FLtLnj6p.jpg',
-    overview: 'In April 1986, an explosion at the Chernobyl nuclear power plant in the Union of Soviet Socialist Republics becomes one of the world\'s worst man-made catastrophes.',
-    genre: ['Drama', 'History'],
-    video_id: 's9APLXM9Ei8'
-  },
-  {
-      id: 8,
-      title: 'Interstellar',
-      rating: 8.7,
-      release_date: '2014',
-      media_type: 'movie',
-      poster_path: 'https://image.tmdb.org/t/p/w500/gEU2QniL6C8zEfVbS9fCl7nhdDV.jpg',
-      backdrop_path: 'https://image.tmdb.org/t/p/original/xJHokMBLkbke0umzh205HGc1fp2.jpg',
-      overview: 'The adventures of a group of explorers who make use of a newly discovered wormhole to surpass the limitations on human space travel and conquer the vast distances involved in an interstellar voyage.',
-      genre: ['Sci-Fi', 'Adventure'],
-      video_id: 'zSWdZVtXT7E'
-  }
-];
+// ─── INITIAL CONTENT ───────────────────────────────────────────
+const INITIAL_MOVIES: (Movie & { video_id: string })[] = CONTENT_CATALOG.map(item => ({
+  ...item,
+  id: item.tmdbId,
+  rating: 8.5,
+  release_date: item.yearStart.toString(),
+  poster_path: `https://placehold.co/500x750/000000/00deff?text=${encodeURIComponent(item.title)}`,
+  backdrop_path: `https://placehold.co/1280x720/000000/00deff?text=${encodeURIComponent(item.title)}`,
+  overview: `${item.title} is a ${item.type === 'movie' ? 'film' : 'series'} from ${item.yearStart}.`,
+  genre: item.tags,
+  video_id: item.tmdbId.toString(),
+  media_type: item.type as 'movie' | 'tv',
+  total_seasons: (item as any).totalSeasons || 1
+})).slice(0, 15);
 
 const Section: React.FC<{ 
   title: string, 
@@ -136,51 +48,53 @@ const Section: React.FC<{
   onMarkWatched?: (m: Movie) => void,
   isWatched?: (id: number) => boolean,
   isInWatchLater?: (id: number) => boolean,
-
   kidsMode?: boolean,
-  showRanking?: boolean
-}> = ({ title, subtitle, icon, rightElement, movies, onPlay, onViewArchive, onRemove, onToggleWatchLater, onMarkWatched, isWatched, isInWatchLater, kidsMode, showRanking }) => (
-  <div className="space-y-4 md:space-y-6">
-    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 px-2">
-        <div className="space-y-1">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white font-cinematic flex items-center gap-2 sm:gap-3 tracking-wider">
+  showRanking?: boolean,
+  isMobile?: boolean
+}> = ({ title, subtitle, icon, rightElement, movies, onPlay, onViewArchive, onRemove, onToggleWatchLater, onMarkWatched, isWatched, isInWatchLater, kidsMode, showRanking, isMobile }) => (
+  <div className="space-y-2 md:space-y-6 overflow-hidden w-full">
+    <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-1 px-4 sm:px-8">
+        <div className="space-y-0.5 sm:space-y-1">
+            <h3 className="text-lg sm:text-2xl md:text-3xl font-black text-white font-cinematic flex items-center gap-2 sm:gap-3 tracking-wider">
                 <span className="flex-shrink-0">{icon}</span> {title}
             </h3>
-            {subtitle && <p className="text-[10px] sm:text-xs font-bold text-white/40 uppercase tracking-[0.2em]">{subtitle}</p>}
+            {subtitle && <p className="text-[8px] sm:text-xs font-bold text-white/40 uppercase tracking-[0.2em]">{subtitle}</p>}
         </div>
-        <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-4">
-            {rightElement}
-            {onViewArchive && (
-                <button 
-                    onClick={onViewArchive}
-                    className="text-[10px] sm:text-xs font-black text-white/80 uppercase tracking-widest px-4 py-2 glass-dark rounded-full hover:bg-white/10 transition-all border border-white/5"
-                >
-                    View Archive
-                </button>
-            )}
-        </div>
+        {!isMobile && (
+            <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-4">
+                {rightElement}
+                {onViewArchive && (
+                    <button 
+                        onClick={onViewArchive}
+                        className="text-[10px] sm:text-xs font-black text-white/80 uppercase tracking-widest px-4 py-2 glass-dark rounded-full hover:bg-white/10 transition-all border border-white/5"
+                    >
+                        View Archive
+                    </button>
+                )}
+            </div>
+        )}
     </div>
     
-    <div className={`flex overflow-x-auto gap-4 sm:gap-8 pt-10 pb-6 sm:pb-10 px-4 sm:px-8 no-scrollbar snap-x snap-mandatory ${kidsMode ? 'px-8' : ''}`}>
+    <div className={`flex overflow-x-auto gap-3 sm:gap-8 pt-4 pb-6 sm:pb-10 px-4 sm:px-8 no-scrollbar snap-x snap-mandatory ${kidsMode ? 'px-8' : ''}`}>
       {movies.map((movie, index) => (
-        <div key={movie.id} className={`min-w-[140px] sm:min-w-[200px] md:min-w-[260px] snap-start group cursor-pointer transition-all duration-300 ease-out relative z-10 hover:z-50 scale-95 hover:scale-105 ${kidsMode ? 'kids-card-hover' : ''}`}>
-           <div onClick={() => onPlay(movie)} className="relative rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden glass-card mb-3 sm:mb-6 aspect-[10/14] border-2 sm:border-4 border-transparent group-hover:border-white/30 transition-all shadow-2xl">
-              <img src={movie.poster_path} alt={movie.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+        <div key={movie.id} className={`min-w-[130px] sm:min-w-[200px] md:min-w-[260px] snap-start group cursor-pointer transition-all duration-300 ease-out relative z-10 hover:z-50 scale-100 sm:scale-95 sm:hover:scale-105 ${kidsMode ? 'kids-card-hover' : ''}`}>
+           <div onClick={() => onPlay(movie)} className="relative rounded-xl sm:rounded-[2rem] overflow-hidden glass-card mb-2 sm:mb-6 aspect-[10/14] border-2 sm:border-4 border-transparent sm:group-hover:border-white/30 transition-all shadow-2xl">
+              <img src={movie.poster_path} alt={movie.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-700 sm:group-hover:scale-110" />
               
-              {/* Hover Overlay: Synopsis */}
-              <div className="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-end p-4 sm:p-6 backdrop-blur-md">
-                 <div className="flex-1 flex items-center justify-center">
-                    <div className="w-10 h-10 sm:w-16 sm:h-16 glass rounded-full flex items-center justify-center text-white scale-50 group-hover:scale-100 transition-transform shadow-neon mb-4">
-                        <PlayCircle size={24} className="sm:w-10 sm:h-10" fill="white" />
-                    </div>
-                 </div>
-                 
-                 <div className="w-full bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/10 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                    <p className="text-[10px] sm:text-xs text-white/90 line-clamp-3 leading-relaxed font-sans text-center">
-                        {movie.overview}
-                    </p>
-                 </div>
-              </div>
+              {!isMobile && (
+                  <div className="absolute inset-0 bg-black/90 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-end p-4 sm:p-6">
+                     <div className="flex-1 flex items-center justify-center">
+                        <div className="w-10 h-10 sm:w-16 sm:h-16 glass rounded-full flex items-center justify-center text-white scale-50 group-hover:scale-100 transition-transform shadow-neon mb-4">
+                            <PlayCircle size={24} className="sm:w-10 sm:h-10" fill="white" />
+                        </div>
+                     </div>
+                     <div className="w-full bg-white/20 p-3 rounded-xl border border-white/10 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                        <p className="text-[10px] sm:text-xs text-white/90 line-clamp-3 leading-relaxed font-sans text-center">
+                            {movie.overview}
+                        </p>
+                     </div>
+                  </div>
+              )}
               
               {/* Ranking or Rating Badge */}
               <div className="absolute top-1 left-1 z-20">
@@ -194,59 +108,13 @@ const Section: React.FC<{
                      </div>
                  )}
               </div>
-
-              {/* Rating moved to bottom left if Ranking is shown */}
-              {showRanking && (
-                  <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 z-20 opacity-100 group-hover:opacity-0 transition-opacity">
-                     <div className="glass-dark px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[6px] sm:text-[8px] font-black text-white uppercase tracking-widest border border-white/10">
-                        {movie.rating} Rating
-                     </div>
-                  </div>
-              )}
-
-              {!onRemove && !kidsMode && (
-                  <div className="absolute top-2 right-2 sm:top-4 sm:right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                    <button 
-                        onClick={(e) => { e.stopPropagation(); onToggleWatchLater?.(movie); }}
-                        title={isInWatchLater?.(movie.id) ? "Remove from Watch Later" : "Add to Watch Later"}
-                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all border border-white/10 ${isInWatchLater?.(movie.id) ? 'bg-white text-black' : 'glass-dark text-white/60 hover:text-white'}`}
-                    >
-                        {isInWatchLater?.(movie.id) ? <Check size={16} /> : <Plus size={16} />}
-                    </button>
-                    <button 
-                        onClick={(e) => { e.stopPropagation(); onMarkWatched?.(movie); }}
-                        title={isWatched?.(movie.id) ? "Watched" : "Mark as Watched"}
-                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all border border-white/10 ${isWatched?.(movie.id) ? 'bg-green-500 text-white' : 'glass-dark text-white/60 hover:text-white'}`}
-                    >
-                        <Eye size={16} />
-                    </button>
-                  </div>
-              )}
-
-              {onRemove && (
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); onRemove(movie); }}
-                    title="Remove from List"
-                    className="absolute top-2 right-2 sm:top-4 sm:right-4 w-8 h-8 sm:w-10 sm:h-10 glass-dark rounded-full flex items-center justify-center text-white/60 hover:text-red-400 hover:bg-black/60 transition-all z-20 border border-white/10"
-                  >
-                    <X size={16} />
-                  </button>
-              )}
-              
-              {!onRemove && movie.media_type === 'tv' && (
-                  <div className={`absolute top-2 left-2 sm:top-4 sm:left-4 z-10 transition-opacity ${!kidsMode ? 'group-hover:opacity-0' : ''}`}>
-                    <div className="bg-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[6px] sm:text-[8px] font-black text-black uppercase tracking-widest shadow-lg">
-                        Serial
-                    </div>
-                  </div>
-              )}
            </div>
-           
-           <div onClick={() => onPlay(movie)} className="space-y-1 sm:space-y-2 px-1 sm:px-2 group-hover:translate-x-1 transition-transform">
-               <h4 className="font-bold text-white text-sm sm:text-lg truncate tracking-wide">{movie.title}</h4>
-               <div className="flex items-center gap-2 sm:gap-3 text-[8px] sm:text-[10px] font-bold text-white/40 uppercase tracking-widest">
+
+           <div onClick={() => onPlay(movie)} className="space-y-0.5 sm:space-y-1.5 px-0.5 sm:px-2 group-hover:translate-x-1 transition-transform">
+               <h4 className="font-bold text-white text-[11px] sm:text-lg truncate tracking-wide leading-tight">{movie.title}</h4>
+               <div className="flex items-center gap-1 sm:gap-3 text-[7px] sm:text-[10px] font-black text-white/30 uppercase tracking-[0.1em] sm:tracking-widest">
                  <span>{movie.release_date}</span>
-                 <span className="w-1 h-1 bg-white/20 rounded-full"></span>
+                 <span className="w-0.5 h-0.5 bg-white/20 rounded-full"></span>
                  <span className="truncate">{movie.genre[0]}</span>
                </div>
            </div>
@@ -275,6 +143,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   const [juniorMovies, setJuniorMovies] = useState<Movie[]>([]);
   const [localHeroes, setLocalHeroes] = useState<Movie[]>([]);
   const [isMobile, setIsMobile] = useState(false);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -284,7 +153,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
+  
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'movie' | 'tv'>('all');
@@ -347,33 +216,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
       return saved ? JSON.parse(saved) : [];
   });
 
-  // Native Spatial Agentic State
-  const [spatialTracking, setSpatialTracking] = useState(false);
-  const [spatialContextLog, setSpatialContextLog] = useState<string[]>([]);
-  const [lastFrameBuffer, setLastFrameBuffer] = useState<string | null>(null);
-  
+  const [isTV, setIsTV] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const seasonCarouselRef = useRef<HTMLDivElement>(null);
+  const episodeCarouselRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // TV Detection
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (spatialTracking && selectedMovie && playerContainerRef.current) {
-      interval = setInterval(async () => {
-        try {
-          const canvas = await html2canvas(playerContainerRef.current!, {
-            scale: 0.5, // Low resolution for efficiency
-            logging: false,
-            useCORS: true,
-            backgroundColor: null
-          });
-          const dataUrl = canvas.toDataURL('image/webp', 0.5);
-          setLastFrameBuffer(dataUrl);
-          const timestamp = new Date().toLocaleTimeString();
-          setSpatialContextLog(prev => [`[${timestamp}] Spatial frame captured (low-res buffer)...`, ...prev].slice(0, 10));
-        } catch (err) {
-          console.warn('Spatial capture skipped (CORS/Ref issue)');
-        }
-      }, 300);
-    }
-    return () => clearInterval(interval);
-  }, [spatialTracking, selectedMovie]);
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isTVDevice = /tv|smarttv|googletv|appletv|hbbtv|pizazz|netcast|viera|sharp-tda2032|playstation|xbox/i.test(userAgent);
+    const isLargeLandscape = window.innerWidth > 1000 && window.innerWidth / window.innerHeight > 1.5;
+    setIsTV(isTVDevice || isLargeLandscape);
+  }, []);
 
   const handleAgenticControl = (command: 'pause' | 'play' | 'seek', value?: number) => {
     console.log(`xScribe Agentic Action: ${command}`, value);
@@ -428,7 +283,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   const [sxeInput, setSxeInput] = useState('S1E1');
   const [videoSource, setVideoSource] = useState<'pluto' | 'uranus'>('uranus');
   const [activeSubtitle, setActiveSubtitle] = useState<string | null>(null);
-  const [totalSeasonsCount, setTotalSeasonsCount] = useState<number>(1);
+  const [totalSeasonsCount, setTotalSeasonsCount] = useState<number>(0);
   const [episodesInCurrentSeason, setEpisodesInCurrentSeason] = useState<number>(0);
   const [adClicksCount, setAdClicksCount] = useState(0);
 
@@ -559,8 +414,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                  fetchByQuery('Toy Story Monsters Inc A Bug\'s Life'), // Specific classics
                  fetchByQuery('Bluey Sesame Street Mickey Mouse Clubhouse Dora') // Educational content
              ]);
-             setTrendingMovies(trending);
-             setRecommendedMovies(recommended);
+             setTrendingMovies([...INITIAL_MOVIES, ...trending]);
+             setRecommendedMovies([...INITIAL_MOVIES.filter(m => m.media_type === 'movie'), ...recommended]);
              setPixarMovies([...pixar, ...classics].filter((m: Movie) => m.rating > 7).sort(() => Math.random() - 0.5));
              setDisneyMovies(disney);
              setKidsHits([...trending, ...recommended].filter((m: Movie) => m.rating > 8));
@@ -577,10 +432,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
             setTrendingMovies(watchLater);
          }
     };
-    loadContent();
-
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [funMode, funYear, selectedCategory, sortBy]); // Re-run when sort or category changes
+    if (searchTerm.length === 0) {
+        loadContent();
+    }
+  }, [funMode, funYear, selectedCategory, sortBy, searchTerm.length]);
 
   useEffect(() => {
     const performSearch = async () => {
@@ -609,6 +464,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
         setIsFullscreen(false);
         setSelectedSeason(1);
         setSelectedEpisode(1);
+        setTotalSeasonsCount(0); // Trigger loading state for new selection
         setVideoSource('uranus');
     }
   }, [selectedMovie]);
@@ -672,9 +528,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   useEffect(() => {
     const fetchTVDetails = async () => {
       if (selectedMovie && selectedMovie.media_type === 'tv') {
+        // First, check content schema for a quick fallback
+        const catalogEntry = findByTmdbId(selectedMovie.id);
+        if (catalogEntry?.totalSeasons) {
+          setTotalSeasonsCount(catalogEntry.totalSeasons);
+        }
+        // Then fetch live data from TMDB (always overrides schema)
         const details = await fetchDetails(selectedMovie.id, 'tv');
-        if (details) {
-          setTotalSeasonsCount(details.number_of_seasons || 1);
+        const tmdbSeasons = details?.number_of_seasons || 0;
+        const catalogSeasons = catalogEntry?.totalSeasons || 0;
+        setTotalSeasonsCount(Math.max(tmdbSeasons, catalogSeasons));
+        
+        if (!details && !catalogEntry?.totalSeasons) {
+          setTotalSeasonsCount(1);
         }
       }
     };
@@ -685,8 +551,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
     const fetchSeasonInfo = async () => {
       if (selectedMovie && selectedMovie.media_type === 'tv') {
         const seasonInfo = await fetchSeasonDetails(selectedMovie.id, selectedSeason);
+        const catalogEntry = findByTmdbId(selectedMovie.id);
+        
+        // Hard override for Jujutsu Kaisen S3 or other updated series
+        if (selectedMovie.title === 'Jujutsu Kaisen' && selectedSeason === 3) {
+          setEpisodesInCurrentSeason(9);
+          return;
+        }
+
         if (seasonInfo && seasonInfo.episodes) {
           setEpisodesInCurrentSeason(seasonInfo.episodes.length);
+        } else if (catalogEntry?.totalSeasons && selectedSeason <= catalogEntry.totalSeasons) {
+          // Fallback to a reasonable default if catalog says it exists but TMDB doesn't
+          setEpisodesInCurrentSeason(12);
         }
       }
     };
@@ -707,6 +584,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
 
     return () => clearInterval(interval);
   }, [trendingMovies.length, selectedMovie]);
+
+  // Auto-scroll Selected Items into View (TV Optimization)
+  useEffect(() => {
+    if (seasonCarouselRef.current) {
+        const activeItem = seasonCarouselRef.current.querySelector('.hbo-btn-primary');
+        if (activeItem) {
+            activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+    }
+  }, [selectedSeason, selectedMovie]);
+
+  useEffect(() => {
+    if (episodeCarouselRef.current) {
+        const activeItem = episodeCarouselRef.current.querySelector('.bg-hbo-accent');
+        if (activeItem) {
+            activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+    }
+  }, [selectedEpisode, selectedMovie]);
 
   // Kids Mode Filter: Strict Zero-Tolerance
   const filterKidsContent = (movies: Movie[]) => {
@@ -865,7 +761,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   };
 
   const shareToSocial = (platform: string) => {
-    const text = encodeURIComponent(`Streaming ${selectedMovie?.title} on WSP Stream!`);
+    const text = encodeURIComponent(`Streaming ${selectedMovie?.title} on WSP MAX!`);
     let url = '';
     switch(platform) {
         case 'Twitter': url = `https://twitter.com/intent/tweet?text=${text}`; break;
@@ -880,160 +776,155 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
     if(url) window.open(url, '_blank');
   };
 
-  return (
-    <div className={`min-h-screen transition-all duration-700 ${kidsMode ? 'kids-mode-active' : (funMode ? `fun-mode-active crt-overlay retro-grid-bg ${getFunClass()}` : 'bg-[#0a0a0a]')}`}>
-      <button title="Secret Anchor" className="opacity-0 absolute pointer-events-none">Hidden</button>
-      {/* Navbar - iOS Glassy */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-3 md:px-6 py-3 md:py-4 flex items-center justify-between gap-2 md:gap-4 ${isScrolled ? 'glass-base border-b' : 'bg-transparent'}`}>
-        <div className="flex items-center gap-2 md:gap-5">
-            {!kidsMode && (
-                <h1 className="font-bold text-white tracking-[0.1em] md:tracking-[0.2em] text-sm sm:text-2xl cursor-pointer whitespace-nowrap font-imax flex items-center gap-2 -mr-[0.1em] md:-mr-[0.2em]">
-                   {funMode && <Monitor size={18} className="text-retro-neon-blue animate-pulse"/>}
-                   WSP <span className="hidden sm:inline">{funMode ? 'RETRO' : 'STREAM'}</span>
-                </h1>
-            )}
-            
-            {!kidsMode && (
-                <div className="hidden lg:flex items-center gap-1 glass-dark p-1 rounded-2xl">
-                    {(['all', 'movie', 'tv'] as const).map(tab => (
-                        <button 
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`px-6 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all ${activeTab === tab ? 'bg-white text-black shadow-lg scale-105' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
-                        >
-                            {tab.toUpperCase()}
-                        </button>
-                    ))}
-                </div>
-            )}
+  // TV Sidebar Component
+  const SideNav = () => (
+    <div 
+      className={`fixed left-0 top-0 bottom-0 z-[100] bg-[#020202]/95 backdrop-blur-3xl border-r border-white/5 flex flex-col transition-all duration-300 ease-in-out ${sidebarExpanded ? 'w-64' : 'w-24'}`}
+      onMouseEnter={() => setSidebarExpanded(true)}
+      onMouseLeave={() => {
+        if (!searchInputRef.current || document.activeElement !== searchInputRef.current) {
+          setSidebarExpanded(false);
+        }
+      }}
+    >
+      <div className="p-8 flex items-center gap-4">
+        <div className="w-8 h-8 bg-gradient-to-tr from-hbo-accent to-hbo-purple rounded-lg flex items-center justify-center flex-shrink-0">
+          <Film className="text-white" size={18} />
+        </div>
+        {sidebarExpanded && <h1 className="text-xl font-black text-white font-cinematic animate-fade-in">WSP<span className="text-hbo-accent">MAX</span></h1>}
+      </div>
 
-            {/* Kids Mode Toggle */}
-            <button 
-                onClick={() => {
-                    setKidsMode(!kidsMode);
-                    if (!kidsMode) setFunMode(false);
-                }}
-                className={`kids-nav-btn flex-shrink-0 transition-all duration-500 scale-75 md:scale-110 origin-left`}
+      <div className="flex-1 px-4 space-y-4 mt-8">
+        {[
+          { icon: <Home size={22} />, label: 'Home', action: () => { setActiveTab('all'); setSelectedCategory('Originals'); setSearchTerm(''); setKidsMode(false); }, active: activeTab === 'all' && !kidsMode && !searchTerm },
+          { icon: <Tv size={22} />, label: 'Series', action: () => { setActiveTab('tv'); setSelectedCategory('Originals'); setSearchTerm(''); setKidsMode(false); }, active: activeTab === 'tv' && !searchTerm },
+          { icon: <Film size={22} />, label: 'Movies', action: () => { setActiveTab('movie'); setSelectedCategory('Originals'); setSearchTerm(''); setKidsMode(false); }, active: activeTab === 'movie' && !searchTerm },
+          { icon: <Baby size={22} />, label: 'Kids', action: () => { setKidsMode(true); setSearchTerm(''); }, active: kidsMode && !searchTerm },
+          { icon: <Search size={22} />, label: 'Search', action: () => { setSidebarExpanded(true); setTimeout(() => searchInputRef.current?.focus(), 100); }, active: searchTerm.length > 0 },
+          { icon: <Bookmark size={22} />, label: 'Watchlist', action: () => { setSelectedCategory('Watch Later'); setSearchTerm(''); }, active: selectedCategory === 'Watch Later' && !searchTerm },
+        ].map((item, idx) => {
+          if (item.label === 'Search' && sidebarExpanded) {
+            return (
+              <div 
+                key={idx} 
+                className={`w-full flex items-center gap-5 p-3.5 rounded-2xl transition-all duration-300 border ${searchTerm.length > 0 ? 'bg-hbo-accent border-hbo-accent text-[#0a0a0a]' : 'bg-white/5 border-white/10 text-white/40 focus-within:border-hbo-accent focus-within:text-white'}`}
+              >
+                <Search size={22} className="flex-shrink-0" />
+                <input 
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="SEARCH..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onFocus={() => setSidebarExpanded(true)}
+                  onBlur={() => !searchTerm && setSidebarExpanded(false)}
+                  className={`bg-transparent border-none outline-none text-[10px] font-black w-full uppercase tracking-widest placeholder:text-white/20 ${searchTerm.length > 0 ? 'text-[#0a0a0a]' : 'text-white'}`}
+                />
+              </div>
+            );
+          }
+          return (
+            <button
+              key={idx}
+              onClick={item.action}
+              className={`w-full flex items-center gap-5 p-3.5 rounded-2xl transition-all duration-300 group focus-visible:ring-4 focus-visible:ring-hbo-accent outline-none ${item.active ? 'bg-hbo-accent text-[#0a0a0a] shadow-[0_0_25px_rgba(0,222,255,0.4)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
             >
-                <span className={`kids-icon-90s ${kidsMode ? 'animate-wobbly' : 'opacity-60 grayscale-[0.5]'} px-4 py-1`}>
-                    KIDS
-                </span>
+              <span className={`flex-shrink-0 transition-transform duration-300 ${!item.active && 'group-hover:scale-110'}`}>{item.icon}</span>
+              {sidebarExpanded && <span className="font-bold text-xs uppercase tracking-widest animate-fade-in">{item.label}</span>}
             </button>
+          );
+        })}
+      </div>
 
-            {/* Fun Mode Toggle - iOS Style */}
-            {!kidsMode && (
-                <div className="relative">
-                    <button 
-                        onClick={() => setShowFunSelector(!showFunSelector)}
-                        className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-full transition-all border ${funMode ? 'border-retro-neon-pink text-retro-neon-pink bg-retro-neon-pink/10' : 'border-white/20 text-white bg-white/5 hover:bg-white/10'}`}
-                    >
-                        <Tv size={16} />
-                        <span className="hidden md:inline font-bold text-xs">ERA</span>
-                        <ChevronDown size={14} className={`transition-transform duration-300 ${showFunSelector ? 'rotate-180' : ''}`} />
-                    </button>
+      <div className="p-6">
+        <button 
+          onClick={() => setShowProfileMenu(true)}
+          className="w-full flex items-center gap-4 p-2 rounded-xl hover:bg-white/5 transition-all group"
+        >
+          <img src={user.avatar} alt="Profile" className="w-10 h-10 rounded-lg border border-white/20 group-hover:border-hbo-accent transition-colors" />
+          {sidebarExpanded && (
+            <div className="flex flex-col items-start animate-fade-in">
+              <span className="text-[10px] font-bold text-white truncate w-32">{user.name}</span>
+              <span className="text-[8px] font-black text-hbo-accent uppercase tracking-tighter">Premium</span>
+            </div>
+          )}
+        </button>
+      </div>
+    </div>
+  );
 
-                    {/* Fun Mode Dropdown - Single Column Scrollable */}
-                    {showFunSelector && (
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0 mt-4 z-50 glass-base rounded-2xl border border-white/20 animate-fade-in w-48 overflow-hidden shadow-2xl">
-                            <div className="max-h-[320px] overflow-y-auto no-scrollbar py-2">
-                                {[1970, 1980, 1990, 2000, 2010, 2020].map(decade => (
-                                    <button 
-                                        key={decade}
-                                        onClick={() => {
-                                            setFunYear(decade);
-                                            setFunMode(true);
-                                            setShowFunSelector(false);
-                                        }}
-                                        className={`w-full px-5 py-4 text-left font-bold transition-all flex items-center justify-between ${funYear === decade ? 'bg-white/20 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
-                                    >
-                                        <span>{decade}s</span>
-                                        {funYear === decade && <div className="w-1.5 h-1.5 rounded-full bg-neu-accent shadow-[0_0_8px_var(--neu-accent)]" />}
-                                    </button>
-                                ))}
-                                <div className="p-2 mt-2 border-t border-white/10">
-                                    <button 
-                                        className="w-full py-3 rounded-xl font-bold bg-red-500/80 text-white hover:bg-red-500 transition-colors text-xs"
-                                        onClick={() => {
-                                            setFunMode(false);
-                                            setFunYear(null);
-                                            setShowFunSelector(false);
-                                        }}
-                                    >
-                                        Disable Fun Mode
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+  return (
+    <div className={`min-h-screen transition-all duration-300 ${isTV ? (sidebarExpanded ? 'pl-64' : 'pl-24') : ''} ${kidsMode ? 'kids-mode-active' : (funMode ? `fun-mode-active crt-overlay retro-grid-bg ${getFunClass()}` : 'bg-[#0a0a0a]')}`}>
+      <button title="Secret Anchor" className="opacity-0 absolute pointer-events-none">Hidden</button>
+      
+      {/* Sidebar for TV, Navbar for Desktop/Mobile */}
+      {isTV ? <SideNav /> : (
+        <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 md:px-12 py-3 md:py-6 flex items-center justify-between ${isScrolled ? 'bg-[#020202]/95 backdrop-blur-xl border-b border-white/5' : 'bg-gradient-to-b from-black/80 to-transparent'}`}>
+            <div className="flex items-center gap-4 md:gap-12">
+                 <div className="flex items-center gap-2 group cursor-pointer" onClick={() => { setActiveTab('all'); window.scrollTo({top: 0, behavior: 'smooth'}); }}>
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-tr from-hbo-accent to-hbo-purple rounded-lg flex items-center justify-center shadow-lg transition-transform group-active:scale-95">
+                        <Film className="text-white" size={isMobile ? 18 : 24} />
+                    </div>
+                     <div className="flex flex-col">
+                         <h1 className="text-lg md:text-2xl font-black text-white font-cinematic tracking-tight leading-none">WSP<span className="text-hbo-accent">MAX</span></h1>
+                     </div>
                 </div>
-            )}
-        </div>
 
-        <div className={`flex-1 min-w-[120px] max-w-xl mx-1 sm:mx-4 relative ${kidsMode ? 'kids-btn-hover cursor-pointer' : ''}`}>
-            <Search className={`absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 ${kidsMode ? 'text-kids-orange' : 'text-white/40'}`} size={16} />
-            <input 
-                type="text"
-                title="Search movies and TV shows"
-                placeholder={kidsMode ? "Find Your Favorite Cartoons!" : "Search..."}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full pl-10 sm:pl-12 pr-4 py-2 outline-none transition-all text-[10px] sm:text-base text-center ${kidsMode ? 'bg-white border-kids-black border-4 rounded-2xl text-black' : 'glass-dark rounded-full text-white placeholder:text-white/30 border border-white/5 focus:border-white/20'}`} 
-            />
-        </div>
-          
-        <div className="flex items-center gap-2 md:gap-4">
-            {!kidsMode && (
-                <NeuIconButton className="hidden sm:flex shadow-neu-out">
-                    <Bookmark size={20} />
-                </NeuIconButton>
-            )}
-            
-            <div className="relative">
-                <button 
-                    onClick={() => setShowProfileMenu(!showProfileMenu)}
-                    className={`flex items-center gap-3 p-1.5 rounded-full transition-all ${kidsMode ? 'bg-white border-2 border-kids-black' : 'glass-dark border border-white/10 hover:border-white/30'}`}
-                >
-                    <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 shadow-lg">
-                        <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                {!isMobile && (
+                    <div className="hidden md:flex items-center gap-8">
+                        {['Home', 'Series', 'Movies', 'Kids'].map((item) => (
+                            <button 
+                                key={item}
+                                onClick={() => {
+                                    if (item === 'Home') setActiveTab('all');
+                                    else if (item === 'Series') setActiveTab('tv');
+                                    else if (item === 'Movies') setActiveTab('movie');
+                                    else if (item === 'Kids') setKidsMode(!kidsMode);
+                                }}
+                                className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:text-white ${
+                                    ((item === 'Home' && activeTab === 'all' && !kidsMode) || 
+                                    (item === 'Series' && activeTab === 'tv') || 
+                                    (item === 'Movies' && activeTab === 'movie') ||
+                                    (item === 'Kids' && kidsMode))
+                                    ? 'text-white border-b-2 border-hbo-accent pb-1' : 'text-white/40'
+                                }`}
+                            >
+                                {item}
+                            </button>
+                        ))}
                     </div>
-                    {!kidsMode && <span className="hidden lg:block font-bold text-xs mr-2 text-white/80">{user.name}</span>}
-                    <ChevronDown size={14} className={`text-white/40 mr-2 transition-transform duration-300 ${showProfileMenu ? 'rotate-180' : ''}`} />
-                </button>
-
-                {showProfileMenu && (
-                  <div className="absolute right-0 top-full mt-4 w-64 glass-base rounded-2xl border border-white/20 p-2 z-50 animate-fade-in shadow-2xl">
-                    <div className="px-4 py-4 border-b border-white/10 mb-2 text-center">
-                      <p className="text-[10px] text-white/40 uppercase font-black tracking-widest mb-1">Session Identity</p>
-                      <p className="font-bold text-white truncate text-lg">{user.name}</p>
-                    </div>
-                    <div className="space-y-1">
-                        <button 
-                          onClick={() => { setSelectedCategory('Watch Later'); setShowProfileMenu(false); }}
-                          className="w-full flex items-center justify-center space-x-3 px-4 py-3 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-all text-sm font-bold"
-                        >
-                          <Clock size={18} />
-                          <span>Parchment List</span>
-                        </button>
-                        <button 
-                          onClick={onSwitchProfile}
-                          className="w-full flex items-center justify-center space-x-3 px-4 py-3 rounded-xl text-white/70 hover:text-white hover:bg-red-500/20 transition-all text-sm font-bold"
-                        >
-                          <LogOut size={18} />
-                          <span>Switch Identity</span>
-                        </button>
-                    </div>
-                  </div>
                 )}
             </div>
-        </div>
-      </nav>
+
+            <div className="flex items-center gap-4 md:gap-8">
+                <div className={`relative flex items-center transition-all ${isMobile ? 'w-full max-w-[120px]' : 'w-full max-w-[350px]'}`}>
+                    <Search className="absolute left-3 text-white/30" size={16} />
+                    <input 
+                        ref={searchInputRef}
+                        type="text"
+                        placeholder={isMobile ? "Search" : "Find movies, TV shows..."}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full bg-white/5 border border-white/10 rounded-full py-2.5 pl-10 pr-6 text-xs text-white placeholder:text-white/20 focus:outline-none focus:ring-1 focus:ring-hbo-accent/30 transition-all font-bold"
+                    />
+                </div>
+                <button 
+                    title="Profile"
+                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                    className="w-8 h-8 md:w-10 md:h-10 rounded-sm border border-white/20 overflow-hidden active:scale-95 transition-transform"
+                >
+                    <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                </button>
+            </div>
+        </nav>
+      )}
 
       {/* Hero Section - Cinematic Layout */}
       <header className="relative w-full min-h-[65vh] sm:min-h-[75vh] md:h-[95vh] overflow-hidden">
         {featuredContent && (
             <>
-                <div className={`absolute inset-0 transition-all duration-1000 transform ${isAnimating ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}`}>
-                    <div className="absolute inset-0 animate-slow-zoom">
+                <div className={`absolute inset-0 transition-all duration-1000 transform ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
+                    <div className="absolute inset-0">
                         <img src={featuredContent.backdrop_path} className="w-full h-full object-cover" alt="Hero" />
                     </div>
                     {/* Gradient Masks */}
@@ -1147,15 +1038,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                 isWatched={(id) => watchHistory.some(m => m.id === id)}
                 isInWatchLater={(id) => watchLater.some(m => m.id === id)}
                 kidsMode={kidsMode}
+                isMobile={isMobile}
             />
           ) : (
              <>
                  {/* Trending / Filtered Section */}
                  {trendingContent.length > 0 && (
                      <Section 
-                        title={selectedCategory === 'Originals' ? "Seni Trending" : `${selectedCategory} Top 15`}
-                        subtitle={selectedCategory === 'Originals' ? "The most watched stories this week" : "Curated selections based on your filter"}
-                        icon={selectedCategory === 'Originals' ? <TrendingUp className="text-white" size={20}/> : <Layers className="text-white" size={20}/>}
+                        title={searchTerm ? "Search Results" : (selectedCategory === 'Originals' ? "Seni Trending" : `${selectedCategory} Top 15`)}
+                        subtitle={searchTerm ? `Displaying matches for "${searchTerm}"` : (selectedCategory === 'Originals' ? "The most watched stories this week" : "Curated selections based on your filter")}
+                        icon={searchTerm ? <Search className="text-white" size={20}/> : (selectedCategory === 'Originals' ? <TrendingUp className="text-white" size={20}/> : <Layers className="text-white" size={20}/>)}
                         rightElement={
                             !['Originals', 'Watch Later'].includes(selectedCategory) && (
                                 <div className="flex gap-2">
@@ -1184,11 +1076,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                         isInWatchLater={(id) => watchLater.some(m => m.id === id)}
                         kidsMode={kidsMode}
                         showRanking={selectedCategory === 'Originals'}
+                        isMobile={isMobile}
                     />
                  )}
         
                  {/* Recommended Section */}
-                 {recommendedContent.length > 0 && (
+                 {recommendedContent.length > 0 && !searchTerm && (
                      <Section 
                         title="Pujangga Recommends" 
                         subtitle="Curated based on your interests"
@@ -1200,13 +1093,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                         isWatched={(id) => watchHistory.some(m => m.id === id)}
                         isInWatchLater={(id) => watchLater.some(m => m.id === id)}
                         kidsMode={kidsMode}
+                        isMobile={isMobile}
                     />
                  )}
              </>
           )}
 
           {/* Watchlist Section (Small View) */}
-          {!kidsMode && watchLater.length > 0 && selectedCategory !== 'Watch Later' && (
+          {!kidsMode && watchLater.length > 0 && selectedCategory !== 'Watch Later' && !searchTerm && (
             <Section 
               title="Parchment List" 
               subtitle="Pick up where you left off" 
@@ -1218,10 +1112,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
               onMarkWatched={addToHistory}
               isWatched={(id) => watchHistory.some(m => m.id === id)}
               isInWatchLater={(id) => watchLater.some(m => m.id === id)}
+              isMobile={isMobile}
             />
           )}
 
-          {kidsMode && (
+           {kidsMode && !searchTerm && (
               <div className="space-y-12 md:space-y-16">
                 <Section 
                     title="Local Favorites (BoBoiBoy & Friends)" 
@@ -1233,6 +1128,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                     isWatched={(id) => watchHistory.some(m => m.id === id)}
                     isInWatchLater={(id) => watchLater.some(m => m.id === id)}
                     kidsMode={kidsMode}
+                    isMobile={isMobile}
                 />
                 <Section 
                     title="Pixar Classics" 
@@ -1244,6 +1140,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                     isWatched={(id) => watchHistory.some(m => m.id === id)}
                     isInWatchLater={(id) => watchLater.some(m => m.id === id)}
                     kidsMode={kidsMode}
+                    isMobile={isMobile}
                 />
                 <Section 
                     title="Disney Magic" 
@@ -1255,6 +1152,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                     isWatched={(id) => watchHistory.some(m => m.id === id)}
                     isInWatchLater={(id) => watchLater.some(m => m.id === id)}
                     kidsMode={kidsMode}
+                    isMobile={isMobile}
                 />
               </div>
           )}
@@ -1270,17 +1168,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
 
       {/* Enhanced Video Player Modal */}
       {selectedMovie && (
-        <div className={`fixed inset-0 z-[60] flex items-center justify-center bg-black/95 transition-all duration-500 ${isTheaterMode ? 'p-0' : 'p-4 md:p-10'}`}>
-           <div 
+        <div className={`fixed inset-0 z-[60] flex items-center justify-center bg-black/95 transition-all duration-500 ${(isTheaterMode || isMobile) ? 'p-0' : 'p-4 md:p-10'}`}>
+            <div 
              ref={playerContainerRef}
-             className={`relative bg-neu-base shadow-2xl overflow-hidden flex flex-col group transition-all duration-500 ${isTheaterMode ? 'w-full h-full rounded-none' : 'w-full max-w-[1400px] h-[85vh] rounded-[2.5rem] border border-white/20'}`}
-           >
+             className={`relative bg-hbo-main shadow-2xl overflow-hidden flex flex-col group transition-all duration-500 ${(isTheaterMode || isMobile) ? 'w-full h-full rounded-none' : 'w-full max-w-[1400px] h-[85vh] rounded-[2.5rem] border border-white/5'}`}
+            >
               {/* Overlay Close */}
               {!isFullscreen && (
                   <button 
                     title="Close Player"
                     onClick={() => setSelectedMovie(null)} 
-                    className={`absolute top-8 z-50 w-10 h-10 glass-dark rounded-full flex items-center justify-center text-white/40 hover:text-white transition-all border border-white/10 ${(rightTabOpen || leftTabOpen) ? "opacity-0 pointer-events-none" : "right-8"}`}
+                    className={`absolute z-50 w-10 h-10 glass-dark rounded-full flex items-center justify-center text-white/40 hover:text-white transition-all border border-white/10 ${(rightTabOpen || leftTabOpen) ? "opacity-0 pointer-events-none" : ""} ${isMobile ? "top-4 right-4" : "top-8 right-8"}`}
                   >
                     <X size={14} />
                   </button>
@@ -1289,17 +1187,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
               <div className="flex-1 relative flex overflow-hidden bg-black">
                 
                 {/* LEFT PANEL: AI & Transcription */}
-                <div className={`absolute left-0 top-0 bottom-0 z-[60] glass-base border-r border-white/10 transition-all duration-500 flex flex-col ${leftTabOpen ? 'w-[22rem] translate-x-0' : 'w-[22rem] -translate-x-full'}`}>
-                    <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
+                <div className={`absolute left-0 top-0 bottom-0 z-[60] hbo-modal border-r border-white/5 transition-all duration-500 flex flex-col ${leftTabOpen ? 'w-[22rem] translate-x-0' : 'w-[22rem] -translate-x-full'}`}>
+                    <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/2">
                         <div className="flex flex-col">
                             <h3 className="font-bold text-white flex items-center gap-2 uppercase tracking-widest text-sm">
                                 <FileText size={18} className="text-white"/> Xscribe
-                                {spatialTracking && (
-                                    <div className="flex items-center gap-1 ml-2">
-                                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_red]"></div>
-                                        <span className="text-[8px] font-black text-red-500 uppercase tracking-tighter">Spatial Tracking</span>
-                                    </div>
-                                )}
                             </h3>
                             <span className="text-[10px] text-white/40 font-bold uppercase tracking-tighter">AI Scene Analysis & Reviews</span>
                         </div>
@@ -1330,7 +1222,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                                         value={xScribeContext}
                                         onChange={(e) => setXScribeContext(e.target.value)}
                                     />
-                                </div>
+                                    </div>
                                 
                                 <p className="text-[10px] font-bold text-white/30 leading-relaxed tracking-wider uppercase">
                                     Summon Xscribe for:
@@ -1345,38 +1237,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                                     {isGenerating ? <Loader2 size={24} className="animate-spin" /> : <Send size={20} />}
                                     Summon Xscribe
                                 </button>
-
-                                <button 
-                                    onClick={() => setSpatialTracking(!spatialTracking)}
-                                    className={`w-full h-12 rounded-xl border flex justify-center items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${spatialTracking ? 'bg-red-500/20 border-red-500 text-red-500' : 'glass-dark border-white/10 text-white/40 hover:text-white hover:bg-white/10'}`}
-                                >
-                                    <Eye size={16} />
-                                    {spatialTracking ? 'Disable Spatial Tracking' : 'Enable Native Spatial xScribe'}
-                                </button>
                             </div>
                         ) : (
                             <div className="space-y-6">
                                 <div className="glass-dark p-6 rounded-3xl text-xs text-white/90 whitespace-pre-wrap font-mono leading-loose border border-white/5 animate-ink-bleed">
                                     {transcript}
                                 </div>
-                                
-                                {spatialTracking && spatialContextLog.length > 0 && (
-                                    <div className="glass-dark p-4 rounded-3xl border border-white/5 space-y-3">
-                                        <h5 className="text-[10px] font-black text-white/30 uppercase tracking-widest flex items-center gap-2">
-                                            <Eye size={12} className="text-red-500" /> Spatial Native Log
-                                        </h5>
-                                        <div className="space-y-1">
-                                            {spatialContextLog.map((log, i) => (
-                                                <div key={i} className="text-[8px] font-mono text-white/40 flex justify-between">
-                                                    <span>{log}</span>
-                                                    <span className="text-red-500/40">CAPTURED</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="p-4 glass-dark rounded-3xl border border-white/5 space-y-3">
+                                <div className="space-y-4">
                                     <h5 className="text-[10px] font-black text-white/30 uppercase tracking-widest">Agentic Controls</h5>
                                     <div className="grid grid-cols-3 gap-2">
                                         <button onClick={() => handleAgenticControl('play')} className="py-2 rounded-xl glass-light border border-white/5 text-[8px] font-black text-white uppercase tracking-widest hover:bg-white/10">Play</button>
@@ -1415,12 +1282,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                     )}
                 </div>
 
-                <button title={leftTabOpen ? "Close Xscribe" : "Open Xscribe"} onClick={() => setLeftTabOpen(!leftTabOpen)} className={`absolute top-1/2 left-0 z-50 transform -translate-y-1/2 bg-neu-base/60 backdrop-blur-lg p-3 rounded-r-2xl shadow-neu-out hover:text-white transition-all ${leftTabOpen ? 'translate-x-[22rem]' : 'translate-x-0'}`}>
+                <button title={leftTabOpen ? "Close Xscribe" : "Open Xscribe"} onClick={() => setLeftTabOpen(!leftTabOpen)} className={`absolute top-1/2 left-0 z-50 transform -translate-y-1/2 bg-hbo-purple-deep/80 backdrop-blur-md p-3 rounded-r-2xl shadow-xl text-hbo-accent hover:text-white transition-all ${leftTabOpen ? 'translate-x-[22rem]' : 'translate-x-0'}`}>
                     {leftTabOpen ? <ChevronLeft size={24} /> : <ChevronRight size={24} />}
                 </button>
 
                 {/* VIDEO ENGINE */}
-                <div className="flex-1 relative flex flex-col items-center justify-center p-8">
+                <div className="flex-1 relative flex flex-col items-center justify-center p-4 md:p-8">
                     <div className={`relative transition-all duration-500 ${funMode ? `w-[90%] h-[80%] ${getTvFrameClass()} crt-screen crt-curve` : 'w-full h-full'}`}>
                         {/* 70s TV Extra Details */}
                         {funMode && funYear && funYear < 1980 && (
@@ -1432,7 +1299,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                         )}
                         
                         <iframe 
-                            className="w-full h-full rounded-sm" 
+                            className={`w-full h-full rounded-sm border-0 iframe-fade-in ${iframeLoaded ? 'loaded' : ''}`} 
                             src={
                                  videoSource === 'pluto' 
                                  ? (selectedMovie.media_type === 'movie' 
@@ -1446,6 +1313,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                             allowFullScreen
                             ref={iframeRef}
                             title={`${selectedMovie.title} Player`}
+                            onLoad={() => setIframeLoaded(true)}
                         ></iframe>
 
                         {/* Click-Guard Overlay: Intercepts the first few ad-trigger clicks */}
@@ -1460,7 +1328,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                         )}
 
                         {selectedMovie.media_type === 'tv' && (
-                            <div className="absolute top-10 left-10 glass-dark text-white px-6 py-2 rounded-full text-xs font-black tracking-widest uppercase z-20">
+                            <div className="absolute top-6 left-6 bg-hbo-accent text-black px-4 py-1.5 rounded-sm text-[10px] font-black tracking-widest uppercase z-20 shadow-[0_0_15px_rgba(0,222,255,0.5)]">
                                 S{selectedSeason} • E{selectedEpisode}
                             </div>
                         )}
@@ -1476,12 +1344,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                     </div>
                 </div>
 
-                <button title={rightTabOpen ? "Close Details" : "Open Details"} onClick={() => setRightTabOpen(!rightTabOpen)} className={`absolute top-1/2 right-0 z-50 transform -translate-y-1/2 bg-neu-base/60 backdrop-blur-lg p-3 rounded-l-2xl shadow-neu-out hover:text-white transition-all ${rightTabOpen ? '-translate-x-[22rem]' : 'translate-x-0'}`}>
+                <button title={rightTabOpen ? "Close Details" : "Open Details"} onClick={() => setRightTabOpen(!rightTabOpen)} className={`absolute top-1/2 right-0 z-50 transform -translate-y-1/2 bg-hbo-purple-deep/80 backdrop-blur-md p-3 rounded-l-2xl shadow-xl text-hbo-accent hover:text-white transition-all ${rightTabOpen ? '-translate-x-[22rem]' : 'translate-x-0'}`}>
                     {rightTabOpen ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
                 </button>
 
                 {/* RIGHT PANEL: Party & Stats */}
-                <div className={`absolute right-0 top-0 bottom-0 z-[60] glass-base border-l border-white/10 transition-all duration-500 flex flex-col ${rightTabOpen ? 'w-[22rem] translate-x-0' : 'w-[22rem] translate-x-full'}`}>
+                <div className={`absolute right-0 top-0 bottom-0 z-[60] hbo-modal border-l border-white/5 transition-all duration-500 flex flex-col ${rightTabOpen ? 'w-[22rem] translate-x-0' : 'w-[22rem] translate-x-full'}`}>
                     {isWatchParty ? (
                         <div className="flex flex-col h-full animate-slide-up">
                              <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
@@ -1613,18 +1481,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                                                 </button>
                                                 
                                                 <div 
+                                                    ref={seasonCarouselRef}
                                                     key={`${selectedSeason}-${episodesInCurrentSeason}`}
                                                     className="flex-1 overflow-x-auto no-scrollbar flex justify-start items-center gap-3 py-2 scroll-smooth px-4 animate-fade-in-blur overscroll-contain"
                                                 >
-                                                    {Array.from({length: totalSeasonsCount}, (_, i) => i + 1).map(s => (
-                                                        <button 
-                                                            key={s} 
-                                                            onClick={() => { setSelectedSeason(s); setSelectedEpisode(1); }} 
-                                                            className={`min-w-[56px] h-14 rounded-2xl flex items-center justify-center text-lg font-black transition-all flex-shrink-0 hover-scale-premium ${selectedSeason === s ? 'bg-white text-black shadow-neon scale-110' : 'glass-dark border border-white/10 text-white/30 hover:text-white'}`}
-                                                        >
-                                                            {s}
-                                                        </button>
-                                                    ))}
+                                                    {totalSeasonsCount === 0 ? (
+                                                        <div className="flex items-center justify-center py-2">
+                                                            <Loader2 size={20} className="animate-spin text-white/40" />
+                                                        </div>
+                                                    ) : (
+                                                        Array.from({length: totalSeasonsCount}, (_, i) => i + 1).map(s => (
+                                                            <button 
+                                                                key={s} 
+                                                                onClick={() => { setSelectedSeason(s); setSelectedEpisode(1); }} 
+                                                                className={`min-w-[56px] h-14 rounded-2xl flex items-center justify-center text-lg font-black transition-all flex-shrink-0 hover-scale-premium ${selectedSeason === s ? 'hbo-btn-primary scale-110 shadow-[0_0_20px_rgba(255,255,255,0.3)]' : 'bg-white/5 border border-white/10 text-white/30 hover:text-white'}`}
+                                                            >
+                                                                {s}
+                                                            </button>
+                                                        ))
+                                                    )}
                                                 </div>
 
                                                 <button 
@@ -1658,6 +1533,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                                                 </button>
 
                                                 <div 
+                                                    ref={episodeCarouselRef}
                                                     key={`${selectedSeason}-${episodesInCurrentSeason}`}
                                                     className="flex-1 overflow-x-auto no-scrollbar flex justify-start items-center gap-3 py-2 scroll-smooth px-4 animate-fade-in-blur overscroll-contain"
                                                 >
@@ -1665,7 +1541,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                                                         <button 
                                                             key={e} 
                                                             onClick={() => setSelectedEpisode(e)} 
-                                                            className={`min-w-[56px] h-14 rounded-2xl flex items-center justify-center text-lg font-black transition-all flex-shrink-0 hover-scale-premium ${selectedEpisode === e ? 'bg-neu-accent text-white shadow-neon scale-110' : 'glass-dark border border-white/10 text-white/30 hover:text-white'}`}
+                                                            className={`min-w-[56px] h-14 rounded-2xl flex items-center justify-center text-lg font-black transition-all flex-shrink-0 hover-scale-premium ${selectedEpisode === e ? 'bg-hbo-accent text-black scale-110 shadow-[0_0_20px_rgba(0,222,255,0.3)]' : 'bg-white/5 border border-white/10 text-white/30 hover:text-white'}`}
                                                         >
                                                             {e}
                                                         </button>
@@ -1711,7 +1587,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                                                 >
                                                     PREV
                                                 </button>
-                                                <span className="text-[10px] font-black text-neu-accent tracking-[0.3em]">S{selectedSeason} : E{selectedEpisode}</span>
+                                                <span className="text-[10px] font-black text-hbo-accent tracking-[0.3em]">S{selectedSeason} : E{selectedEpisode}</span>
                                                 <button 
                                                     onClick={() => {
                                                         if (selectedEpisode < episodesInCurrentSeason) setSelectedEpisode(prev => prev + 1);
@@ -1925,6 +1801,112 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                       />
                   </div>
               </div>
+          </div>
+      )}
+      {/* Mobile Bottom Navigation */}
+      {isMobile && !selectedMovie && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#020202]/95 backdrop-blur-xl border-t border-white/5 py-4 px-8 flex justify-between items-center animate-slide-up">
+            <button title="Home" className={`flex flex-col items-center gap-1 ${activeTab === 'all' ? 'text-hbo-accent' : 'text-white/40'}`} onClick={() => { setActiveTab('all'); window.scrollTo({top: 0, behavior: 'smooth'}); }}>
+                <Film size={20} />
+                <span className="text-[8px] font-black uppercase tracking-widest">Home</span>
+            </button>
+            <button title="TV Shows" className={`flex flex-col items-center gap-1 ${activeTab === 'tv' ? 'text-hbo-accent' : 'text-white/40'}`} onClick={() => setActiveTab('tv')}>
+                <Tv size={20} />
+                <span className="text-[8px] font-black uppercase tracking-widest">Series</span>
+            </button>
+            <button title="Search" className="flex flex-col items-center gap-1 text-white/40" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
+                <Search size={20} />
+                <span className="text-[8px] font-black uppercase tracking-widest">Search</span>
+            </button>
+            <button title="Library" className="flex flex-col items-center gap-1 text-white/40" onClick={() => { setSelectedCategory('Originals'); setActiveTab('all'); }}>
+                <Layers size={20} />
+                <span className="text-[8px] font-black uppercase tracking-widest">Library</span>
+            </button>
+            <button title="Account" className="flex flex-col items-center gap-1 text-white/40" onClick={() => setShowProfileMenu(true)}>
+                <div className="w-5 h-5 rounded-sm bg-gradient-to-tr from-hbo-accent to-hbo-purple border border-white/20"></div>
+                <span className="text-[8px] font-black uppercase tracking-widest">Profile</span>
+            </button>
+        </div>
+      )}
+
+      {/* Profile/Account Drawer (Mobile) */}
+      {isMobile && showProfileMenu && (
+        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md animate-fade-in p-8" onClick={() => setShowProfileMenu(false)}>
+            <div className="flex flex-col h-full" onClick={e => e.stopPropagation()}>
+                <div className="flex justify-between items-center mb-12">
+                     <h2 className="text-2xl font-black text-white font-cinematic uppercase tracking-widest">Account</h2>
+                     <button title="Close Account" onClick={() => setShowProfileMenu(false)} className="text-white/40"><X size={24}/></button>
+                </div>
+                
+                <div className="flex items-center gap-6 mb-12 p-6 glass-dark rounded-[2rem] border border-white/10">
+                    <img src={user.avatar} alt={user.name} className="w-20 h-20 rounded-2xl shadow-neon border-2 border-hbo-accent" />
+                    <div>
+                        <h3 className="text-xl font-bold text-white mb-1">{user.name}</h3>
+                        <p className="text-xs text-hbo-accent uppercase font-black tracking-widest">HBO Max Subscriber</p>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <button title="Switch Profile" onClick={onSwitchProfile} className="w-full p-6 glass-dark rounded-2xl border border-white/5 flex items-center justify-between text-white font-bold">
+                        <span>Switch Profile</span>
+                        <ChevronRight size={18} className="text-white/20"/>
+                    </button>
+                    <button title="Settings" className="w-full p-6 glass-dark rounded-2xl border border-white/5 flex items-center justify-between text-white font-bold">
+                        <span>Settings</span>
+                        <ChevronRight size={18} className="text-white/20"/>
+                    </button>
+                    <button title="Help Center" className="w-full p-6 glass-dark rounded-2xl border border-white/5 flex items-center justify-between text-white font-bold">
+                        <span>Help Center</span>
+                        <ChevronRight size={18} className="text-white/20"/>
+                    </button>
+                </div>
+
+                <div className="mt-auto pb-12">
+                    <button title="Sign Out" className="w-full p-6 bg-red-500/10 text-red-500 rounded-2xl border border-red-500/20 font-black uppercase tracking-[0.2em] text-sm">
+                        Sign Out
+                    </button>
+                </div>
+            </div>
+        </div>
+      )}
+
+      {/* Profile/Account Overlay (Desktop/TV) */}
+      {!isMobile && showProfileMenu && (
+          <div className="fixed right-4 md:right-12 top-20 w-64 md:w-72 bg-[#050505] border border-white/10 rounded-3xl shadow-2xl p-6 animate-slide-up z-[110]">
+              <div className="flex items-center gap-4 mb-6 p-4 glass-dark rounded-2xl border border-white/5">
+                  <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-xl" />
+                  <div>
+                      <p className="text-sm font-bold text-white">{user.name}</p>
+                      <p className="text-[10px] font-black text-hbo-accent uppercase tracking-widest">Subscriber</p>
+                  </div>
+              </div>
+              <div className="space-y-1">
+                  {[
+                      { label: 'Switch Profile', action: onSwitchProfile },
+                      { label: 'Settings', action: () => {} },
+                      { label: 'Help Center', action: () => {} }
+                  ].map(opt => (
+                      <button 
+                          key={opt.label} 
+                          onClick={opt.action}
+                          className="w-full text-left p-3 rounded-xl hover:bg-white/5 text-[10px] font-black text-white/60 hover:text-white uppercase tracking-widest transition-all"
+                      >
+                          {opt.label}
+                      </button>
+                  ))}
+              </div>
+              <button 
+                onClick={() => window.location.reload()}
+                className="w-full mt-4 py-3 bg-red-500/10 text-red-500 rounded-xl border border-red-500/10 text-[10px] font-black uppercase tracking-widest"
+              >
+                  Sign Out
+              </button>
+              <button 
+                onClick={() => setShowProfileMenu(false)}
+                className="w-full mt-2 py-2 text-[8px] font-bold text-white/20 uppercase tracking-tighter"
+              >
+                Close Menu
+              </button>
           </div>
       )}
     </div>

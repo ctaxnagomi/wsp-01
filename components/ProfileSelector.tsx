@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, User, Trash2, Pencil, RefreshCw } from 'lucide-react';
-import { NeuCard, NeuInput, NeuButton } from './NeumorphicUI';
 import { UserProfile } from '../types';
 import { getProfiles, createProfile, deleteProfile, updateProfile, generateAvatar } from '../services/profileService';
 
@@ -72,149 +71,133 @@ export const ProfileSelector: React.FC<ProfileSelectorProps> = ({ onSelectProfil
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 md:p-6 animate-fade-in">
-      <div className="w-full max-w-4xl text-center">
-        <h1 className="text-2xl md:text-4xl font-bold text-neu-text mb-8 md:mb-12 tracking-wider">
-            {profiles.length === 0 ? "Welcome to WSP Stream" : "Who is watching?"}
+    <div className="min-h-screen flex items-center justify-center p-4 md:p-6 animate-fade-in bg-black">
+      {/* Background Effect */}
+      <div className="stars opacity-50"></div>
+      
+      <div className="w-full max-w-4xl text-center z-10">
+        <h1 className="text-3xl md:text-5xl font-light text-white/90 mb-12 md:mb-16 tracking-[0.2em] font-cinematic">
+            {profiles.length === 0 ? "WELCOME" : "WHO IS WATCHING?"}
         </h1>
         
         {profiles.length === 0 ? (
-             /* Placeholder UI for Empty State */
             <div className="flex justify-center animate-fade-in-up">
                 <div className="w-full max-w-md">
-                    <NeuCard className="flex flex-col items-center text-center p-10">
-                        <div className="w-24 h-24 rounded-full bg-neu-base shadow-neu-out mb-6 flex items-center justify-center text-neu-accent">
+                    <div className="white-glass flex flex-col items-center text-center p-10 border-white/20">
+                        <div className="w-24 h-24 rounded-full bg-white/5 border border-white/10 mb-6 flex items-center justify-center text-white/80">
                             <User size={40} />
                         </div>
-                        <h2 className="text-2xl font-bold text-neu-text mb-2">Create Your Profile</h2>
-                        <p className="text-gray-500 mb-8 text-sm">
-                            It looks like you're new here. Set up your profile to customize your experience and start streaming.
+                        <h2 className="text-2xl font-light text-white mb-2">Create Your Profile</h2>
+                        <p className="text-white/40 mb-8 text-sm font-light">
+                            Set up your profile to customize your experience and start streaming.
                         </p>
-                        <NeuButton 
-                            variant="primary" 
+                        <button 
                             onClick={() => setIsCreating(true)}
-                            className="w-full flex items-center justify-center gap-2"
+                            className="w-full py-4 px-6 bg-white/10 hover:bg-white/20 text-white rounded-xl border border-white/20 transition-all flex items-center justify-center gap-2 tracking-widest uppercase text-sm"
                         >
                             <Plus size={20} /> Get Started
-                        </NeuButton>
-                    </NeuCard>
-                </div>
-            </div>
-        ) : (
-            /* Existing Profile Grid */
-            <div className="flex flex-wrap justify-center gap-4 md:gap-8">
-            {profiles.map((profile) => (
-                <div key={profile.id} className="group relative">
-                <button
-                    title={`Select Profile: ${profile.name}`}
-                    onClick={() => onSelectProfile(profile)}
-                    className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-neu-base shadow-neu-out flex items-center justify-center overflow-hidden mb-2 md:mb-4 transition-transform transform group-hover:scale-105 active:scale-95 border-4 border-transparent group-hover:border-neu-accent/20"
-                >
-                    <img src={profile.avatar} alt={profile.name} className="w-full h-full object-cover" />
-                </button>
-                <h3 className="text-base sm:text-xl font-semibold text-neu-text group-hover:text-neu-accent transition-colors">{profile.name}</h3>
-                
-                <div className="absolute -top-1 -right-1 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button 
-                    onClick={(e) => startEditing(e, profile)}
-                    className="p-2 bg-neu-base rounded-full text-blue-400 shadow-neu-btn hover:text-blue-600"
-                    title="Edit Profile"
-                    >
-                    <Pencil size={16} />
-                    </button>
-                    <button 
-                    onClick={(e) => handleDelete(e, profile.id)}
-                    className="p-2 bg-neu-base rounded-full text-red-400 shadow-neu-btn hover:text-red-600"
-                    title="Delete Profile"
-                    >
-                    <Trash2 size={16} />
-                    </button>
-                </div>
-                </div>
-            ))}
-
-            {/* Add Profile Button */}
-            <div className="flex flex-col items-center">
-                <button
-                title="Add New Profile"
-                onClick={() => setIsCreating(true)}
-                className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-full bg-neu-base shadow-neu-out flex items-center justify-center text-neu-text/50 hover:text-neu-accent transition-all active:shadow-neu-in mb-2 md:mb-4"
-                >
-                <Plus size={32} className="md:w-12 md:h-12" />
-                </button>
-                <h3 className="text-base sm:text-xl font-semibold text-neu-text/50">Add Profile</h3>
-            </div>
-            </div>
-        )}
-
-        {/* Create Profile Modal */}
-        {isCreating && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-neu-base/80 backdrop-blur-sm p-4 animate-fade-in">
-            <NeuCard className="w-full max-w-md">
-              <h2 className="text-2xl font-bold text-neu-text mb-6">Create Profile</h2>
-              <form onSubmit={handleCreate} className="space-y-6">
-                <div className="relative">
-                   <User className="absolute left-4 top-3.5 text-gray-400" size={20} />
-                   <NeuInput 
-                     autoFocus
-                     placeholder="Name" 
-                     value={newProfileName}
-                     onChange={(e) => setNewProfileName(e.target.value)}
-                     className="pl-12"
-                   />
-                </div>
-                <div className="flex space-x-4">
-                  <NeuButton type="button" onClick={() => setIsCreating(false)} className="flex-1">
-                    Cancel
-                  </NeuButton>
-                  <NeuButton type="submit" variant="primary" className="flex-1" disabled={!newProfileName.trim()}>
-                    Save
-                  </NeuButton>
-                </div>
-              </form>
-            </NeuCard>
-          </div>
-        )}
-
-        {/* Edit Profile Modal */}
-        {editingProfile && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-neu-base/80 backdrop-blur-sm p-4 animate-fade-in">
-            <NeuCard className="w-full max-w-md">
-              <h2 className="text-2xl font-bold text-neu-text mb-6">Edit Profile</h2>
-              <form onSubmit={handleUpdate} className="space-y-6">
-                <div className="flex flex-col items-center mb-6">
-                    <div className="relative w-24 h-24 mb-4">
-                        <img src={editAvatar} alt="Preview" className="w-full h-full rounded-full shadow-neu-out object-cover" />
-                        <button 
-                            type="button"
-                            onClick={randomizeEditAvatar}
-                            className="absolute bottom-0 right-0 p-2 bg-neu-base rounded-full shadow-neu-btn hover:text-neu-accent transition-all"
-                            title="Randomize Avatar"
-                        >
-                            <RefreshCw size={16} className={isSpinning ? 'animate-spin' : ''} />
                         </button>
                     </div>
                 </div>
-                <div className="relative">
-                   <User className="absolute left-4 top-3.5 text-gray-400" size={20} />
-                   <NeuInput 
-                     autoFocus
-                     placeholder="Name" 
-                     value={editName}
-                     onChange={(e) => setEditName(e.target.value)}
-                     className="pl-12"
-                   />
+            </div>
+        ) : (
+            <div className="flex flex-wrap justify-center gap-6 md:gap-12">
+            {profiles.map((profile) => (
+                <div key={profile.id} className="group relative flex flex-col items-center">
+                    <button
+                        onClick={() => onSelectProfile(profile)}
+                        className="w-24 h-24 sm:w-32 sm:h-32 md:w-44 md:h-44 rounded-2xl md:rounded-3xl white-glass overflow-hidden mb-4 transition-all transform hover:scale-105 active:scale-95 border-2 border-white/10 hover:border-white/40 shadow-xl"
+                    >
+                        <img src={profile.avatar} alt={profile.name} className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-500" />
+                    </button>
+                    <h3 className="text-base sm:text-xl font-light text-white/70 group-hover:text-white transition-colors tracking-wide">{profile.name}</h3>
+                    
+                    <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                            onClick={(e) => startEditing(e, profile)}
+                            className="p-2 bg-black/40 backdrop-blur-md rounded-lg text-white/60 hover:text-white border border-white/10"
+                            title="Edit Profile"
+                        >
+                            <Pencil size={14} />
+                        </button>
+                        <button 
+                            onClick={(e) => handleDelete(e, profile.id)}
+                            className="p-2 bg-black/40 backdrop-blur-md rounded-lg text-white/60 hover:text-red-400 border border-white/10"
+                            title="Delete Profile"
+                        >
+                            <Trash2 size={14} />
+                        </button>
+                    </div>
                 </div>
-                <div className="flex space-x-4">
-                  <NeuButton type="button" onClick={() => setEditingProfile(null)} className="flex-1">
+            ))}
+
+            <div className="flex flex-col items-center">
+                <button
+                    title="Add Profile"
+                    onClick={() => setIsCreating(true)}
+                    className="w-24 h-24 sm:w-32 sm:h-32 md:w-44 md:h-44 rounded-2xl md:rounded-3xl white-glass flex items-center justify-center text-white/30 hover:text-white hover:border-white/40 transition-all active:scale-95"
+                >
+                    <Plus size={32} className="md:w-16 md:h-16 font-light" />
+                </button>
+                <h3 className="text-base sm:text-xl font-light text-white/30 mt-4 tracking-wide">Add Profile</h3>
+            </div>
+            </div>
+        )}
+
+        {/* Modal Overlays */}
+        {(isCreating || editingProfile) && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xl p-4 animate-fade-in">
+            <div className="white-glass w-full max-w-md p-8 md:p-10 border-white/20">
+              <h2 className="text-2xl font-light text-white mb-8 tracking-widest uppercase">
+                  {isCreating ? "New Profile" : "Edit Profile"}
+              </h2>
+              
+              <form onSubmit={isCreating ? handleCreate : handleUpdate} className="space-y-8">
+                {editingProfile && (
+                    <div className="flex flex-col items-center">
+                        <div className="relative w-28 h-28 mb-4">
+                            <img src={editAvatar} alt="Preview" className="w-full h-full rounded-2xl white-glass object-cover border border-white/20" />
+                            <button 
+                                type="button"
+                                onClick={randomizeEditAvatar}
+                                className="absolute -bottom-2 -right-2 p-3 bg-white text-black rounded-xl shadow-2xl hover:bg-white/90 transition-all"
+                                title="Randomize Avatar"
+                            >
+                                <RefreshCw size={18} className={isSpinning ? 'animate-spin' : ''} />
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                <div className="relative group">
+                    <input 
+                        autoFocus
+                        type="text"
+                        placeholder="Name" 
+                        value={isCreating ? newProfileName : editName}
+                        onChange={(e) => isCreating ? setNewProfileName(e.target.value) : setEditName(e.target.value)}
+                        className="w-full bg-white/5 border-b-2 border-white/10 focus:border-white/40 outline-none py-3 px-2 text-white transition-all font-light tracking-widest"
+                    />
+                </div>
+
+                <div className="flex space-x-4 pt-4">
+                  <button 
+                    type="button" 
+                    onClick={() => { setIsCreating(false); setEditingProfile(null); }} 
+                    className="flex-1 py-4 text-white/50 hover:text-white transition-colors uppercase text-xs tracking-widest"
+                  >
                     Cancel
-                  </NeuButton>
-                  <NeuButton type="submit" variant="primary" className="flex-1" disabled={!editName.trim()}>
-                    Update
-                  </NeuButton>
+                  </button>
+                  <button 
+                    type="submit" 
+                    disabled={isCreating ? !newProfileName.trim() : !editName.trim()}
+                    className="flex-1 py-4 bg-white/10 hover:bg-white/20 text-white rounded-xl border border-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all uppercase text-xs tracking-widest font-bold"
+                  >
+                    {isCreating ? "Create" : "Save"}
+                  </button>
                 </div>
               </form>
-            </NeuCard>
+            </div>
           </div>
         )}
       </div>
