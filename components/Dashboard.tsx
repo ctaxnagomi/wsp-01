@@ -202,6 +202,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   const [sortBy, setSortBy] = useState('popularity.desc'); // 'popularity.desc' | 'vote_average.desc' | 'primary_release_date.desc'
   const [showHistoryToast, setShowHistoryToast] = useState(false);
   const [showShareToast, setShowShareToast] = useState(false);
+  const [showPatchNotes, setShowPatchNotes] = useState(false);
   
   // Watch Later State
   // Supabase Integration & Watch Later State
@@ -802,6 +803,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
           { icon: <Baby size={22} />, label: 'Kids', action: () => { setKidsMode(true); setSearchTerm(''); }, active: kidsMode && !searchTerm },
           { icon: <Search size={22} />, label: 'Search', action: () => { setSidebarExpanded(true); setTimeout(() => searchInputRef.current?.focus(), 100); }, active: searchTerm.length > 0 },
           { icon: <Bookmark size={22} />, label: 'Watchlist', action: () => { setSelectedCategory('Watch Later'); setSearchTerm(''); }, active: selectedCategory === 'Watch Later' && !searchTerm },
+          { icon: <FileText size={22} />, label: 'Patch Notes', action: () => { setShowPatchNotes(true); setSidebarExpanded(false); }, active: showPatchNotes },
         ].map((item, idx) => {
           if (item.label === 'Search' && sidebarExpanded) {
             return (
