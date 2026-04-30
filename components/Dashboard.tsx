@@ -28,7 +28,7 @@ const INITIAL_MOVIES: (Movie & { video_id: string })[] = CONTENT_CATALOG.map(ite
   release_date: item.yearStart.toString(),
   poster_path: `https://placehold.co/500x750/000000/00deff?text=${encodeURIComponent(item.title)}`,
   backdrop_path: `https://placehold.co/1280x720/000000/00deff?text=${encodeURIComponent(item.title)}`,
-  overview: `${item.title} is a ${item.type === 'movie' ? 'film' : 'series'} from ${item.yearStart}.`,
+  overview: '', // Removed redundant placeholder text
   genre: item.tags,
   video_id: item.tmdbId.toString(),
   media_type: item.type as 'movie' | 'tv',
@@ -79,20 +79,21 @@ const Section: React.FC<{
       {movies.map((movie, index) => (
         <div key={movie.id} className={`min-w-[130px] sm:min-w-[200px] md:min-w-[260px] snap-start group cursor-pointer transition-all duration-300 ease-out relative z-10 hover:z-50 scale-100 sm:scale-95 sm:hover:scale-105 ${kidsMode ? 'kids-card-hover' : ''}`}>
            <div onClick={() => onPlay(movie)} className="relative rounded-xl sm:rounded-[2rem] overflow-hidden glass-card mb-2 sm:mb-6 aspect-[10/14] border-2 sm:border-4 border-transparent sm:group-hover:border-white/30 transition-all shadow-2xl">
-              <img src={movie.poster_path} alt={movie.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-700 sm:group-hover:scale-110" />
+              <img 
+                src={movie.poster_path} 
+                alt={movie.title} 
+                loading="lazy" 
+                className="w-full h-full object-cover transition-transform duration-700 sm:group-hover:scale-110"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = `https://placehold.co/500x750/1a1a1a/ffffff?text=${encodeURIComponent(movie.title)}`;
+                }}
+              />
               
               {!isMobile && (
-                  <div className="absolute inset-0 bg-black/90 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-end p-4 sm:p-6">
-                     <div className="flex-1 flex items-center justify-center">
-                        <div className="w-10 h-10 sm:w-16 sm:h-16 glass rounded-full flex items-center justify-center text-white scale-50 group-hover:scale-100 transition-transform shadow-neon mb-4">
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-center p-4 sm:p-6">
+                        <div className="w-10 h-10 sm:w-16 sm:h-16 glass rounded-full flex items-center justify-center text-white scale-50 group-hover:scale-100 transition-transform shadow-neon">
                             <PlayCircle size={24} className="sm:w-10 sm:h-10" fill="white" />
                         </div>
-                     </div>
-                     <div className="w-full bg-white/20 p-3 rounded-xl border border-white/10 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                        <p className="text-[10px] sm:text-xs text-white/90 line-clamp-3 leading-relaxed font-sans text-center">
-                            {movie.overview}
-                        </p>
-                     </div>
                   </div>
               )}
               
@@ -343,6 +344,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
   const [xScribeContext, setXScribeContext] = useState('');
   const [transcriptError, setTranscriptError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [spatialTracking, setSpatialTracking] = useState(false);
+  const [spatialContextLog, setSpatialContextLog] = useState<string[]>([]);
+  const [lastFrameBuffer, setLastFrameBuffer] = useState<string | null>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
 
   // Archive State
@@ -415,8 +419,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
                  fetchByQuery('Toy Story Monsters Inc A Bug\'s Life'), // Specific classics
                  fetchByQuery('Bluey Sesame Street Mickey Mouse Clubhouse Dora') // Educational content
              ]);
-             setTrendingMovies([...INITIAL_MOVIES, ...trending]);
-             setRecommendedMovies([...INITIAL_MOVIES.filter(m => m.media_type === 'movie'), ...recommended]);
+             setTrendingMovies(trending);
+             setRecommendedMovies(recommended);
              setPixarMovies([...pixar, ...classics].filter((m: Movie) => m.rating > 7).sort(() => Math.random() - 0.5));
              setDisneyMovies(disney);
              setKidsHits([...trending, ...recommended].filter((m: Movie) => m.rating > 8));
@@ -803,6 +807,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
           { icon: <Baby size={22} />, label: 'Kids', action: () => { setKidsMode(true); setSearchTerm(''); }, active: kidsMode && !searchTerm },
           { icon: <Search size={22} />, label: 'Search', action: () => { setSidebarExpanded(true); setTimeout(() => searchInputRef.current?.focus(), 100); }, active: searchTerm.length > 0 },
           { icon: <Bookmark size={22} />, label: 'Watchlist', action: () => { setSelectedCategory('Watch Later'); setSearchTerm(''); }, active: selectedCategory === 'Watch Later' && !searchTerm },
+          { icon: <Clock size={22} />, label: '90s Hits', action: () => { setFunMode(true); setFunYear(1990); setSearchTerm(''); }, active: funMode && funYear === 1990 },
+          { icon: <Clock size={22} />, label: '80s Hits', action: () => { setFunMode(true); setFunYear(1980); setSearchTerm(''); }, active: funMode && funYear === 1980 },
           { icon: <FileText size={22} />, label: 'Patch Notes', action: () => { setShowPatchNotes(true); setSidebarExpanded(false); }, active: showPatchNotes },
         ].map((item, idx) => {
           if (item.label === 'Search' && sidebarExpanded) {
@@ -829,7 +835,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
             <button
               key={idx}
               onClick={item.action}
-              className={`w-full flex items-center gap-5 p-3.5 rounded-2xl transition-all duration-300 group focus-visible:ring-4 focus-visible:ring-hbo-accent outline-none ${item.active ? 'bg-hbo-accent text-[#0a0a0a] shadow-[0_0_25px_rgba(0,222,255,0.4)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+              className={`w-full flex items-center gap-5 p-3.5 rounded-2xl transition-all duration-300 group focus-visible:ring-4 focus-visible:ring-hbo-accent outline-none ${item.active ? 'bg-hbo-accent text-black font-black shadow-[0_0_30px_rgba(0,222,255,0.6)] scale-[1.02]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
             >
               <span className={`flex-shrink-0 transition-transform duration-300 ${!item.active && 'group-hover:scale-110'}`}>{item.icon}</span>
               {sidebarExpanded && <span className="font-bold text-xs uppercase tracking-widest animate-fade-in">{item.label}</span>}
