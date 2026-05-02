@@ -145,12 +145,14 @@ interface SideNavProps {
   user: UserProfile;
   setShowProfileMenu: (show: boolean) => void;
   selectedCategory: string;
+  sidebarMinimized: boolean;
+  setSidebarMinimized: (min: boolean) => void;
 }
 
 const PatchNotesModal: React.FC<{ show: boolean; onClose: () => void }> = ({ show, onClose }) => {
   if (!show) return null;
   return (
-    <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
+    <div className={`fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in transition-all duration-300 ${isTV ? (sidebarMinimized ? 'pl-12' : (sidebarExpanded ? 'pl-64' : 'pl-24')) : ''}`} onClick={onClose}>
       <div className="bg-[#0a0a0a] border border-white/10 w-full max-w-2xl rounded-[2.5rem] p-8 md:p-12 shadow-2xl relative" onClick={e => e.stopPropagation()}>
         <button onClick={onClose} title="Close Patch Notes" className="absolute top-6 right-6 text-white/40 hover:text-white transition-all"><X size={24} /></button>
         <div className="space-y-8">
@@ -213,7 +215,9 @@ const SideNav: React.FC<SideNavProps> = ({
   searchInputRef,
   user,
   setShowProfileMenu,
-  selectedCategory
+  selectedCategory,
+  sidebarMinimized,
+  setSidebarMinimized
 }) => {
   // Local state for search to maintain focus stability on TV browsers
   const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
@@ -233,84 +237,106 @@ const SideNav: React.FC<SideNavProps> = ({
     }
   }, [searchTerm]);
 
+  const navItems = [
+    { icon: <Home size={22} />, label: 'Home', action: () => { setActiveTab('all'); setSelectedCategory('Originals'); setLocalSearchTerm(''); setKidsMode(false); setFunMode(false); }, active: activeTab === 'all' && !kidsMode && !localSearchTerm && !funMode },
+    { icon: <Tv size={22} />, label: 'Series', action: () => { setActiveTab('tv'); setSelectedCategory('Originals'); setLocalSearchTerm(''); setKidsMode(false); setFunMode(false); }, active: activeTab === 'tv' && !localSearchTerm && !funMode },
+    { icon: <Film size={22} />, label: 'Movies', action: () => { setActiveTab('movie'); setSelectedCategory('Originals'); setLocalSearchTerm(''); setKidsMode(false); setFunMode(false); }, active: activeTab === 'movie' && !localSearchTerm && !funMode },
+    { icon: <Baby size={22} />, label: 'Kids', action: () => { setKidsMode(true); setLocalSearchTerm(''); setFunMode(false); }, active: kidsMode && !localSearchTerm },
+    { icon: <Search size={22} />, label: 'Search', action: () => { setSidebarExpanded(true); setTimeout(() => searchInputRef.current?.focus(), 100); }, active: localSearchTerm.length > 0 },
+    { icon: <Bookmark size={22} />, label: 'Watchlist', action: () => { setSelectedCategory('Watch Later'); setLocalSearchTerm(''); setFunMode(false); }, active: selectedCategory === 'Watch Later' && !localSearchTerm },
+    { icon: <Clock size={22} />, label: '90s Hits', action: () => { setFunMode(true); setFunYear(1990); setLocalSearchTerm(''); setKidsMode(false); }, active: funMode && funYear === 1990 },
+    { icon: <Clock size={22} />, label: '80s Hits', action: () => { setFunMode(true); setFunYear(1980); setLocalSearchTerm(''); setKidsMode(false); }, active: funMode && funYear === 1980 },
+    { icon: <FileText size={22} />, label: 'Patch Notes', action: () => { setShowPatchNotes(true); setSidebarExpanded(false); }, active: showPatchNotes },
+  ];
+
   return (
     <div 
-      className={`fixed left-0 top-0 bottom-0 z-[100] bg-[#020202]/95 backdrop-blur-3xl border-r border-white/5 flex flex-col transition-all duration-300 ease-in-out ${sidebarExpanded ? 'w-64' : 'w-24'}`}
-      onMouseEnter={() => setSidebarExpanded(true)}
+      className={`fixed left-0 top-0 bottom-0 z-[100] bg-[#020202]/95 backdrop-blur-3xl border-r border-white/5 flex flex-col transition-all duration-300 ease-in-out ${sidebarMinimized ? 'w-12' : (sidebarExpanded ? 'w-64' : 'w-24')}`}
+      onMouseEnter={() => !sidebarMinimized && setSidebarExpanded(true)}
       onMouseLeave={() => {
         if (!searchInputRef.current || document.activeElement !== searchInputRef.current) {
           setSidebarExpanded(false);
         }
       }}
     >
-      <div className="p-8 flex items-center gap-4">
-        <div className="w-8 h-8 bg-gradient-to-tr from-hbo-accent to-hbo-purple rounded-lg flex items-center justify-center flex-shrink-0">
-          <Film className="text-white" size={18} />
-        </div>
-        {sidebarExpanded && <h1 className="text-xl font-black text-white font-cinematic animate-fade-in">WSP<span className="text-hbo-accent">MAX</span></h1>}
-      </div>
-
-      <div className="flex-1 px-4 space-y-4 mt-8 overflow-y-auto no-scrollbar">
-        {[
-          { icon: <Home size={22} />, label: 'Home', action: () => { setActiveTab('all'); setSelectedCategory('Originals'); setLocalSearchTerm(''); setKidsMode(false); setFunMode(false); }, active: activeTab === 'all' && !kidsMode && !localSearchTerm && !funMode },
-          { icon: <Tv size={22} />, label: 'Series', action: () => { setActiveTab('tv'); setSelectedCategory('Originals'); setLocalSearchTerm(''); setKidsMode(false); setFunMode(false); }, active: activeTab === 'tv' && !localSearchTerm && !funMode },
-          { icon: <Film size={22} />, label: 'Movies', action: () => { setActiveTab('movie'); setSelectedCategory('Originals'); setLocalSearchTerm(''); setKidsMode(false); setFunMode(false); }, active: activeTab === 'movie' && !localSearchTerm && !funMode },
-          { icon: <Baby size={22} />, label: 'Kids', action: () => { setKidsMode(true); setLocalSearchTerm(''); setFunMode(false); }, active: kidsMode && !localSearchTerm },
-          { icon: <Search size={22} />, label: 'Search', action: () => { setSidebarExpanded(true); setTimeout(() => searchInputRef.current?.focus(), 100); }, active: localSearchTerm.length > 0 },
-          { icon: <Bookmark size={22} />, label: 'Watchlist', action: () => { setSelectedCategory('Watch Later'); setLocalSearchTerm(''); setFunMode(false); }, active: selectedCategory === 'Watch Later' && !localSearchTerm },
-          { icon: <Clock size={22} />, label: '90s Hits', action: () => { setFunMode(true); setFunYear(1990); setLocalSearchTerm(''); setKidsMode(false); }, active: funMode && funYear === 1990 },
-          { icon: <Clock size={22} />, label: '80s Hits', action: () => { setFunMode(true); setFunYear(1980); setLocalSearchTerm(''); setKidsMode(false); }, active: funMode && funYear === 1980 },
-          { icon: <FileText size={22} />, label: 'Patch Notes', action: () => { setShowPatchNotes(true); setSidebarExpanded(false); }, active: showPatchNotes },
-        ].map((item, idx) => {
-          if (item.label === 'Search' && sidebarExpanded) {
-            return (
-              <div 
-                key={idx} 
-                className={`w-full flex items-center gap-5 p-3.5 rounded-2xl transition-all duration-300 border ${localSearchTerm.length > 0 ? 'bg-hbo-accent border-hbo-accent text-[#0a0a0a]' : 'bg-white/5 border-white/10 text-white/40 focus-within:border-hbo-accent focus-within:text-white'}`}
-              >
-                <Search size={22} className="flex-shrink-0" />
-                <input 
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="SEARCH..."
-                  value={localSearchTerm}
-                  onChange={(e) => setLocalSearchTerm(e.target.value)}
-                  onFocus={() => setSidebarExpanded(true)}
-                  onBlur={() => !localSearchTerm && setSidebarExpanded(false)}
-                  className={`bg-transparent border-none outline-none text-[10px] font-black w-full uppercase tracking-widest placeholder:text-white/20 ${localSearchTerm.length > 0 ? 'text-[#0a0a0a]' : 'text-white'}`}
-                />
-              </div>
-            );
-          }
-          return (
-            <button
-              key={idx}
-              onClick={item.action}
-              title={item.label}
-              className={`w-full flex items-center gap-5 p-3.5 rounded-2xl transition-all duration-300 group focus-visible:ring-4 focus-visible:ring-hbo-accent outline-none ${item.active ? 'bg-hbo-accent text-black font-black shadow-[0_0_30px_rgba(0,222,255,0.6)] scale-[1.02]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
-            >
-              <span className={`flex-shrink-0 transition-transform duration-300 ${!item.active && 'group-hover:scale-110'}`}>{item.icon}</span>
-              {sidebarExpanded && <span className="font-bold text-xs uppercase tracking-widest animate-fade-in">{item.label}</span>}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="p-6">
-        <button 
-          onClick={() => setShowProfileMenu(true)}
-          title="Profile Menu"
-          className="w-full flex items-center gap-4 p-2 rounded-xl hover:bg-white/5 transition-all group"
+      {sidebarMinimized ? (
+        <div 
+          className="flex-1 flex items-center justify-center cursor-pointer hover:bg-white/5"
+          onClick={() => setSidebarMinimized(false)}
         >
-          <img src={user.avatar} alt="Profile" className="w-10 h-10 rounded-lg border border-white/20 group-hover:border-hbo-accent transition-colors" />
-          {sidebarExpanded && (
-            <div className="flex flex-col items-start animate-fade-in">
-              <span className="text-[10px] font-bold text-white truncate w-32">{user.name}</span>
-              <span className="text-[8px] font-black text-hbo-accent uppercase tracking-tighter">Premium</span>
+          <ChevronRight className="text-hbo-accent animate-pulse" size={24} />
+        </div>
+      ) : (
+        <>
+          <div className="p-8 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-8 h-8 bg-gradient-to-tr from-hbo-accent to-hbo-purple rounded-lg flex items-center justify-center flex-shrink-0">
+                <Film className="text-white" size={18} />
+              </div>
+              {sidebarExpanded && <h1 className="text-xl font-black text-white font-cinematic animate-fade-in">WSP<span className="text-hbo-accent">MAX</span></h1>}
             </div>
-          )}
-        </button>
-      </div>
+            <button 
+                onClick={(e) => { e.stopPropagation(); setSidebarMinimized(true); }}
+                className="p-1 hover:bg-white/10 rounded-full transition-colors text-white/40 hover:text-white"
+                title="Minimize Sidebar"
+            >
+                <ChevronLeft size={20} />
+            </button>
+          </div>
+
+          <div className="flex-1 px-4 space-y-4 mt-8 overflow-y-auto no-scrollbar">
+            {navItems.map((item, idx) => {
+              if (item.label === 'Search' && sidebarExpanded) {
+                return (
+                  <div 
+                    key={idx} 
+                    className={`w-full flex items-center gap-5 p-3.5 rounded-2xl transition-all duration-300 border ${localSearchTerm.length > 0 ? 'bg-hbo-accent border-hbo-accent text-[#0a0a0a]' : 'bg-white/5 border-white/10 text-white/40 focus-within:border-hbo-accent focus-within:text-white'}`}
+                  >
+                    <Search size={22} className="flex-shrink-0" />
+                    <input 
+                      ref={searchInputRef}
+                      type="text"
+                      placeholder="SEARCH..."
+                      value={localSearchTerm}
+                      onChange={(e) => setLocalSearchTerm(e.target.value)}
+                      onFocus={() => setSidebarExpanded(true)}
+                      onBlur={() => !localSearchTerm && setSidebarExpanded(false)}
+                      className={`bg-transparent border-none outline-none text-[10px] font-black w-full uppercase tracking-widest placeholder:text-white/20 ${localSearchTerm.length > 0 ? 'text-[#0a0a0a]' : 'text-white'}`}
+                    />
+                  </div>
+                );
+              }
+              return (
+                <button
+                  key={idx}
+                  onClick={item.action}
+                  title={item.label}
+                  className={`w-full flex items-center gap-5 p-3.5 rounded-2xl transition-all duration-300 group focus-visible:ring-4 focus-visible:ring-hbo-accent outline-none ${item.active ? 'bg-hbo-accent text-black font-black shadow-[0_0_30px_rgba(0,222,255,0.6)] scale-[1.02]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                >
+                  <span className={`flex-shrink-0 transition-transform duration-300 ${!item.active && 'group-hover:scale-110'}`}>{item.icon}</span>
+                  {sidebarExpanded && <span className="font-bold text-xs uppercase tracking-widest animate-fade-in">{item.label}</span>}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="p-6">
+            <button 
+              onClick={() => setShowProfileMenu(true)}
+              title="Profile Menu"
+              className="w-full flex items-center gap-4 p-2 rounded-xl hover:bg-white/5 transition-all group"
+            >
+              <img src={user.avatar} alt="Profile" className="w-10 h-10 rounded-lg border border-white/20 group-hover:border-hbo-accent transition-colors" />
+              {sidebarExpanded && (
+                <div className="flex flex-col items-start animate-fade-in">
+                  <span className="text-[10px] font-bold text-white truncate w-32">{user.name}</span>
+                  <span className="text-[8px] font-black text-hbo-accent uppercase tracking-tighter">Premium</span>
+                </div>
+              )}
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 };
@@ -410,6 +436,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
 
   const [isTV, setIsTV] = useState(false);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [sidebarMinimized, setSidebarMinimized] = useState(true);
   const seasonCarouselRef = useRef<HTMLDivElement>(null);
   const episodeCarouselRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -973,7 +1000,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
 
 
   return (
-    <div className={`min-h-screen transition-all duration-300 ${isTV ? (sidebarExpanded ? 'pl-64' : 'pl-24') : ''} ${kidsMode ? 'kids-mode-active' : (funMode ? `fun-mode-active crt-overlay retro-grid-bg ${getFunClass()}` : 'bg-[#0a0a0a]')}`}>
+    <div className={`min-h-screen transition-all duration-300 ${isTV ? (sidebarMinimized ? 'pl-12' : (sidebarExpanded ? 'pl-64' : 'pl-24')) : ''} ${kidsMode ? 'kids-mode-active' : (funMode ? `fun-mode-active crt-overlay retro-grid-bg ${getFunClass()}` : 'bg-[#0a0a0a]')}`}>
       <button title="Secret Anchor" className="opacity-0 absolute pointer-events-none">Hidden</button>
       
       {/* Sidebar for TV, Navbar for Desktop/Mobile */}
@@ -998,9 +1025,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
           user={user}
           setShowProfileMenu={setShowProfileMenu}
           selectedCategory={selectedCategory}
+          sidebarMinimized={sidebarMinimized}
+          setSidebarMinimized={setSidebarMinimized}
         />
       ) : (
-        <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 md:px-12 py-3 md:py-6 flex items-center justify-between ${isScrolled ? 'bg-[#020202]/95 backdrop-blur-xl border-b border-white/5' : 'bg-gradient-to-b from-black/80 to-transparent'}`}>
+        <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 md:px-12 py-3 md:py-6 flex items-center justify-between ${isScrolled ? 'bg-[#020202]/95 backdrop-blur-xl border-b border-white/5' : 'bg-gradient-to-b from-black/80 to-transparent'} ${isTV ? (sidebarMinimized ? 'pl-12' : (sidebarExpanded ? 'pl-64' : 'pl-24')) : ''}`}>
             <div className="flex items-center gap-4 md:gap-12">
                  <div className="flex items-center gap-2 group cursor-pointer" onClick={() => { setActiveTab('all'); window.scrollTo({top: 0, behavior: 'smooth'}); }}>
                     <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-tr from-hbo-accent to-hbo-purple rounded-lg flex items-center justify-center shadow-lg transition-transform group-active:scale-95">
@@ -1310,7 +1339,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
 
       {/* Enhanced Video Player Modal */}
       {selectedMovie && (
-        <div className={`fixed inset-0 z-[60] flex items-center justify-center bg-black/95 transition-all duration-500 ${(isTheaterMode || isMobile) ? 'p-0' : 'p-4 md:p-10'}`}>
+        <div className={`fixed inset-0 z-[60] flex items-center justify-center bg-black/95 transition-all duration-500 ${(isTheaterMode || isMobile) ? 'p-0' : 'p-4 md:p-10'} ${isTV ? (sidebarMinimized ? 'pl-12' : (sidebarExpanded ? 'pl-64' : 'pl-24')) : ''}`}>
             <div 
              ref={playerContainerRef}
              className={`relative bg-hbo-main shadow-2xl overflow-hidden flex flex-col group transition-all duration-500 ${(isTheaterMode || isMobile) ? 'w-full h-full rounded-none' : 'w-full max-w-[1400px] h-[85vh] rounded-[2.5rem] border border-white/5'}`}
@@ -1879,7 +1908,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
       )}
       {/* ARCHIVE OVERLAY */}
       {showArchive && (
-          <div className="fixed inset-0 z-[60] bg-[#0a0a0a]/95 backdrop-blur-3xl overflow-y-auto no-scrollbar animate-fade-in custom-scrollbar">
+          <div className={`fixed inset-0 z-[60] bg-[#0a0a0a]/95 backdrop-blur-3xl overflow-y-auto no-scrollbar animate-fade-in custom-scrollbar transition-all duration-300 ${isTV ? (sidebarMinimized ? 'pl-12' : (sidebarExpanded ? 'pl-64' : 'pl-24')) : ''}`}>
               <div className="p-4 md:p-10 flex flex-col gap-6 md:gap-10">
                   <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
                       <h1 className="text-2xl md:text-4xl font-black text-white font-cinematic uppercase tracking-widest flex items-center gap-2 md:gap-4 pr-16 md:pr-0">
@@ -1973,7 +2002,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onSwitchProfile }) =
 
       {/* Profile/Account Drawer (Mobile) */}
       {isMobile && showProfileMenu && (
-        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md animate-fade-in p-8" onClick={() => setShowProfileMenu(false)}>
+        <div className={`fixed inset-0 z-[100] bg-black/90 backdrop-blur-md animate-fade-in p-8 transition-all duration-300 ${isTV ? (sidebarMinimized ? 'pl-12' : (sidebarExpanded ? 'pl-64' : 'pl-24')) : ''}`} onClick={() => setShowProfileMenu(false)}>
             <div className="flex flex-col h-full" onClick={e => e.stopPropagation()}>
                 <div className="flex justify-between items-center mb-12">
                      <h2 className="text-2xl font-black text-white font-cinematic uppercase tracking-widest">Account</h2>
