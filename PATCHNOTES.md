@@ -6,7 +6,7 @@ This update focuses on stabilizing the video engine, enhancing security against 
 
 ## ✨ New Features & Improvements
 
-### 📺 Video Engine
+### 📺 Video Engine.
 
 - **Uranus Default**: The "Uranus" server is now the default engine for all content to ensure maximum playback success.
 - **Auto-Sync**: Automatically resets the server to Uranus whenever a new movie or TV show is selected.
